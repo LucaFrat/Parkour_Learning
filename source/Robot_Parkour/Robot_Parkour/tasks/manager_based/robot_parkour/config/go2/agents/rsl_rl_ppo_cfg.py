@@ -37,12 +37,13 @@ class PPORunnerCfg(RslRlOnPolicyRunnerCfg):
         max_grad_norm=1.0,
     )
 
+
 @configclass
 class PPORunnerGRUCfg(RslRlOnPolicyRunnerCfg):
     num_steps_per_env = 24
-    max_iterations = 150
+    max_iterations = 1500
     save_interval = 50
-    experiment_name = "parkour"
+    experiment_name = "parkour_gru"
     policy = RslRlPpoActorCriticRecurrentCfg(
         init_noise_std=1.0,
         actor_obs_normalization=True,
