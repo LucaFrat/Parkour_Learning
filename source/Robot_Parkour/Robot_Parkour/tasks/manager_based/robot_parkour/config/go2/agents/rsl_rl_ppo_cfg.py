@@ -11,6 +11,10 @@ from isaaclab_rl.rsl_rl import RslRlOnPolicyRunnerCfg, RslRlPpoActorCriticCfg, R
 @configclass
 class PPORunnerCfg(RslRlOnPolicyRunnerCfg):
     num_steps_per_env = 16
+    obs_groups = {
+            "policy": ["policy"],
+            "critic": ["policy"],
+        }
     max_iterations = 150
     save_interval = 50
     experiment_name = "robot_parkour"

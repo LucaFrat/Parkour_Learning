@@ -75,6 +75,22 @@ class RobotParkourSceneCfg(InteractiveSceneCfg):
     # )
 
 
+@configclass
+class CommandsCfg:
+
+    forward_velocity = mdp.UniformVelocityCommandCfg(
+        asset_name="robot",
+        resampling_time_range=(10.0, 10.0),
+        rel_standing_envs=0.02,
+        rel_heading_envs=1.0,
+        heading_command=True,
+        heading_control_stiffness=0.5,
+        debug_vis=True,
+        ranges=mdp.UniformVelocityCommandCfg.Ranges(
+            lin_vel_x=(1.2, 1.2), lin_vel_y=(0.0, 0.0), ang_vel_z=(0.0, 0.0), heading=(0.0, 0.0)
+        ),
+    )
+
 
 @configclass
 class ActionsCfg:
@@ -108,10 +124,22 @@ class ObservationsCfg:
     class Privileged_Physical(ObsGroup):
         """Privileged Physical Information"""
 
+        def __post_init__(self) -> None:
+            self.enable_corruption = False
+            self.concatenate_terms = True
+
+    @configclass
+    class Privileged_Visual(ObsGroup):
+        """Privileged Visual Information"""
+        def __post_init__(self) -> None:
+            self.enable_corruption = False
+            self.concatenate_terms = True
 
 
     # observation groups
     policy: PolicyCfg = PolicyCfg()
+    # physics: Privileged_Physical = Privileged_Physical()
+    # visual: Privileged_Visual = Privileged_Visual()
 
 
 @configclass
@@ -161,7 +189,7 @@ class EventCfg:
         func=mdp.reset_root_state_uniform,
         mode="reset",
         params={
-            "pose_range": {"x": (-0.3, 0.3), "y": (-0.3, 0.3), "yaw": (-3.14, 3.14)},
+            "pose_range": {"x": (-0.3, 0.3), "y": (-0.3, 0.3), "yaw": (0.0, 0.0)},
             "velocity_range": {
                 "x": (-0.0, 0.0),
                 "y": (-0.0, 0.0),
@@ -182,36 +210,38 @@ class EventCfg:
         },
     )
 
-    # push_robot = EventTerm(
-    #     func=mdp.push_by_setting_velocity,
-    #     mode="interval",
-    #     interval_range_s=(2.0, 5.0),
-    #     params={"velocity_range": {"x": (-0.5, 0.5), "y": (-0.5, 0.5)}},
-    # )
 
 
 @configclass
 class RewardsCfg:
     """Reward terms for the MDP."""
 
-    # (1) Constant running reward
-    alive = RewTerm(func=mdp.is_alive, weight=1.0)
-    # (2) Failure penalty
-    terminating = RewTerm(func=mdp.is_terminated, weight=-2.0)
-    # (3) Primary task: keep pole upright
+    forward_velocity = RewTerm(
+        func=mdp.forward_velocity,
+        weight= -1.0,
+        params={"command_name": "forward_velocity"}
+    )
+    lateral_velocity = RewTerm(
+        func=mdp.lateral_velocity,
+        weight= -1.0
+    )
+    yaw_rate = RewTerm(
+        func=mdp.yaw_rate,
+        weight= 0.1,
+    )
+
+    alive = RewTerm(func=mdp.is_alive, weight=2.0)
+
 
 
 @configclass
 class TerminationsCfg:
     """Termination terms for the MDP."""
 
-    # (1) Time out
     time_out = DoneTerm(func=mdp.time_out, time_out=True)
 
 
-##
-# Environment configuration
-##
+
 
 
 @configclass
@@ -220,6 +250,7 @@ class RobotParkourEnvCfg(ManagerBasedRLEnvCfg):
     scene: RobotParkourSceneCfg = RobotParkourSceneCfg(num_envs=512, env_spacing=4)
     # Basic settings
     observations: ObservationsCfg = ObservationsCfg()
+    commands: CommandsCfg = CommandsCfg()
     actions: ActionsCfg = ActionsCfg()
     events: EventCfg = EventCfg()
     # MDP settings

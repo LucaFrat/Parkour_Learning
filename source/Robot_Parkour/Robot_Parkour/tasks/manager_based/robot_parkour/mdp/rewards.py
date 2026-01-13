@@ -24,3 +24,41 @@ def joint_pos_target_l2(env: ManagerBasedRLEnv, target: float, asset_cfg: SceneE
     joint_pos = wrap_to_pi(asset.data.joint_pos[:, asset_cfg.joint_ids])
     # compute the reward
     return torch.sum(torch.square(joint_pos - target), dim=1)
+
+
+def forward_velocity(
+    env: ManagerBasedRLEnv,
+    command_name: str = "forward_velocity",
+    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot")
+    ) -> torch.Tensor:
+
+    robot = env.scene[asset_cfg.name]
+    command = env.command_manager.get_command(command_name)
+
+    command_x = command[:, 0]
+    robot_vel_x = robot.data.root_lin_vel_w[:, 0]
+
+    return torch.norm(command_x - robot_vel_x, dim=1)
+
+
+def lateral_velocity(
+    env: ManagerBasedRLEnv,
+    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot")
+    ) -> torch.Tensor:
+
+    robot = env.scene[asset_cfg.name]
+    robot_vel_y = robot.data.root_lin_vel_w[:, 1]
+
+    return torch.norm(robot_vel_y, dim=1) ** 2
+
+
+def yaw_rate(
+    env: ManagerBasedRLEnv,
+    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot")
+    ) -> torch.Tensor:
+
+    robot = env.scene[asset_cfg.name]
+    robot_yaw_rate = robot.data.root_ang_vel_w[:, 2]
+    robot_yaw_rate_norm = torch.norm(robot_yaw_rate, dim=1)
+
+    return torch.exp(-robot_yaw_rate_norm)

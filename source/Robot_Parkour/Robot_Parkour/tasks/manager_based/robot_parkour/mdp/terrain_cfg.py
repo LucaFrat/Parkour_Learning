@@ -13,11 +13,9 @@ from .terrains import single_box_terrain
 
 @configclass
 class SingleBoxTerrainCfg(SubTerrainBaseCfg):
-
     function = single_box_terrain
-    box_size: tuple[float, float, float] = (1.0, 2.0, 1.0)
-
-
+    box_size_xy: tuple[float, float] = (1.0, 6.0)
+    box_range_z: tuple[float, float] = (0.2, 0.45)
 
 
 
@@ -35,20 +33,7 @@ TERRAIN_CFG = TerrainGeneratorCfg(
         # "random_rough": terrain_gen_hf.HfRandomUniformTerrainCfg(
         #     proportion=0.2, noise_range=(0.02, 0.10), noise_step=0.02, border_width=0.25
         # ),
-        # "boxed": terrain_gen_trimesh.MeshRepeatedBoxesTerrainCfg(
-        #     proportion=0.4,
-        #     object_type="box",
-        #     platform_height=0.0,
-        #     object_params_start=terrain_gen_trimesh.MeshRepeatedBoxesTerrainCfg.ObjectCfg(
-        #         num_objects=2,
-        #         height=2,
-        #         size=(0.5, 1)),
-        #     object_params_end=terrain_gen_trimesh.MeshRepeatedBoxesTerrainCfg.ObjectCfg(
-        #         num_objects=5,
-        #         height=3,
-        #         size=(0.5, 1)),
-        # ),
-        "boxes": SingleBoxTerrainCfg(
+        "box": SingleBoxTerrainCfg(
             proportion=1.0,
             # size=(2, 4)
         )
