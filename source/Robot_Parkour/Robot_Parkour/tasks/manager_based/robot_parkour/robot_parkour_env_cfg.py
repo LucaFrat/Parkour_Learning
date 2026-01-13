@@ -19,7 +19,7 @@ from isaaclab.scene import InteractiveSceneCfg
 from isaaclab.utils import configclass
 from isaaclab.terrains import TerrainImporterCfg
 from isaaclab.utils.assets import ISAACLAB_NUCLEUS_DIR, ISAAC_NUCLEUS_DIR
-from isaaclab.sensors import TiledCameraCfg
+from isaaclab.sensors import TiledCameraCfg, ContactSensorCfg
 from isaaclab.utils.noise import AdditiveUniformNoiseCfg as Unoise
 
 
@@ -29,6 +29,8 @@ from . import mdp
 
 @configclass
 class RobotParkourSceneCfg(InteractiveSceneCfg):
+
+    robot: ArticulationCfg = MISSING
 
     terrain = TerrainImporterCfg(
         prim_path="/World/ground",
@@ -50,8 +52,7 @@ class RobotParkourSceneCfg(InteractiveSceneCfg):
         debug_vis=False,
     )
 
-    # robot
-    robot: ArticulationCfg = MISSING
+    contact_forces = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/.*", history_length=3, track_air_time=True)
 
     sky_light = AssetBaseCfg(
         prim_path="/World/skyLight",
@@ -123,7 +124,6 @@ class ObservationsCfg:
     @configclass
     class Privileged_Physical(ObsGroup):
         """Privileged Physical Information"""
-
         def __post_init__(self) -> None:
             self.enable_corruption = False
             self.concatenate_terms = True
@@ -216,6 +216,7 @@ class EventCfg:
 class RewardsCfg:
     """Reward terms for the MDP."""
 
+    # FORWARD
     forward_velocity = RewTerm(
         func=mdp.forward_velocity,
         weight= -1.0,
@@ -227,10 +228,20 @@ class RewardsCfg:
     )
     yaw_rate = RewTerm(
         func=mdp.yaw_rate,
-        weight= 0.1,
+        weight= 0.1
     )
 
+    # ENERGY
+    energy_usage = RewTerm(
+        func=mdp.energy_usage,
+        weight= 2e-6
+    )
+
+    # ALIVE
     alive = RewTerm(func=mdp.is_alive, weight=2.0)
+
+    # PENETRATE
+    # penetration = RewTerm( ... )
 
 
 
@@ -239,7 +250,10 @@ class TerminationsCfg:
     """Termination terms for the MDP."""
 
     time_out = DoneTerm(func=mdp.time_out, time_out=True)
-
+    base_contact = DoneTerm(
+        func=mdp.illegal_contact,
+        params={"sensor_cfg": SceneEntityCfg("contact_forces", body_names="base"), "threshold": 1.0},
+    )
 
 
 
@@ -262,7 +276,7 @@ class RobotParkourEnvCfg(ManagerBasedRLEnvCfg):
         """Post initialization."""
         # general settings
         self.decimation = 4
-        self.episode_length_s = 5
+        self.episode_length_s = 10
         # viewer settings
         self.viewer.eye = (8.0, 0.0, 5.0)
         # simulation settings

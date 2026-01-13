@@ -46,7 +46,11 @@ class PPORunnerCfg(RslRlOnPolicyRunnerCfg):
 class PPORunnerGRUCfg(RslRlOnPolicyRunnerCfg):
     num_steps_per_env = 24
     max_iterations = 1500
-    save_interval = 50
+    obs_groups = {
+            "policy": ["policy"],
+            "critic": ["policy"],
+        }
+    save_interval = 150
     experiment_name = "parkour_gru"
     policy = RslRlPpoActorCriticRecurrentCfg(
         init_noise_std=1.0,

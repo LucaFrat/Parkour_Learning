@@ -38,7 +38,7 @@ def forward_velocity(
     command_x = command[:, 0]
     robot_vel_x = robot.data.root_lin_vel_w[:, 0]
 
-    return torch.norm(command_x - robot_vel_x, dim=1)
+    return torch.norm(command_x - robot_vel_x)
 
 
 def lateral_velocity(
@@ -49,7 +49,7 @@ def lateral_velocity(
     robot = env.scene[asset_cfg.name]
     robot_vel_y = robot.data.root_lin_vel_w[:, 1]
 
-    return torch.norm(robot_vel_y, dim=1) ** 2
+    return torch.norm(robot_vel_y) ** 2
 
 
 def yaw_rate(
@@ -59,6 +59,20 @@ def yaw_rate(
 
     robot = env.scene[asset_cfg.name]
     robot_yaw_rate = robot.data.root_ang_vel_w[:, 2]
-    robot_yaw_rate_norm = torch.norm(robot_yaw_rate, dim=1)
+    robot_yaw_rate_norm = torch.norm(robot_yaw_rate)
 
     return torch.exp(-robot_yaw_rate_norm)
+
+
+def energy_usage(
+    env: ManagerBasedRLEnv,
+    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+    ) -> torch.Tensor:
+
+    robot = env.scene[asset_cfg.name]
+
+    torques = robot.data.applied_torque[:, :]
+    velocities = robot.data.joint_vel[:, :]
+
+    value_per_joing = torch.abs(torques*velocities) **2
+    return torch.sum(value_per_joing, dim=1)
