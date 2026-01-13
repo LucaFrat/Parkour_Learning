@@ -25,8 +25,6 @@ from isaaclab.utils.noise import AdditiveUniformNoiseCfg as Unoise
 
 
 from . import mdp
-# from .mdp.terrains import MY_TERRAIN_CFG
-
 
 
 @configclass
@@ -77,10 +75,6 @@ class RobotParkourSceneCfg(InteractiveSceneCfg):
     # )
 
 
-##
-# MDP settings
-##
-
 
 @configclass
 class ActionsCfg:
@@ -110,6 +104,12 @@ class ObservationsCfg:
             self.enable_corruption = False
             self.concatenate_terms = True
 
+    @configclass
+    class Privileged_Physical(ObsGroup):
+        """Privileged Physical Information"""
+
+
+
     # observation groups
     policy: PolicyCfg = PolicyCfg()
 
@@ -118,18 +118,76 @@ class ObservationsCfg:
 class EventCfg:
     """Configuration for events."""
 
-    # reset
+    motor_strengh = EventTerm(
+        func=mdp.randomize_motor_strenght,
+        mode="reset",
+        params={
+            "range": (0.9, 1.1)
+        }
+    )
+
     physics_material = EventTerm(
         func=mdp.randomize_rigid_body_material,
         mode="startup",
         params={
             "asset_cfg": SceneEntityCfg("robot", body_names=".*"),
-            "static_friction_range": (0.8, 0.8),
-            "dynamic_friction_range": (0.6, 0.6),
+            "static_friction_range": (0.7, 0.9),
+            "dynamic_friction_range": (0.5, 0.7),
             "restitution_range": (0.0, 0.0),
             "num_buckets": 64,
         },
     )
+
+    base_com = EventTerm(
+        func=mdp.randomize_rigid_body_com,
+        mode="startup",
+        params={
+            "asset_cfg": SceneEntityCfg("robot", body_names="base"),
+            "com_range": {"x": (-0.05, 0.15), "y": (-0.1, 0.1), "z": (-0.05, 0.05)},
+        },
+    )
+
+    add_base_mass = EventTerm(
+        func=mdp.randomize_rigid_body_mass,
+        mode="startup",
+        params={
+            "asset_cfg": SceneEntityCfg("robot", body_names="base"),
+            "mass_distribution_params": (1.0, 3.0),
+            "operation": "add",
+        },
+    )
+
+    reset_base = EventTerm(
+        func=mdp.reset_root_state_uniform,
+        mode="reset",
+        params={
+            "pose_range": {"x": (-0.3, 0.3), "y": (-0.3, 0.3), "yaw": (-3.14, 3.14)},
+            "velocity_range": {
+                "x": (-0.0, 0.0),
+                "y": (-0.0, 0.0),
+                "z": (-0.0, 0.0),
+                "roll": (-0.0, 0.0),
+                "pitch": (-0.0, 0.0),
+                "yaw": (-0.0, 0.0),
+            },
+        },
+    )
+
+    reset_robot_joints = EventTerm(
+        func=mdp.reset_joints_by_scale,
+        mode="reset",
+        params={
+            "position_range": (0.8, 1.2),
+            "velocity_range": (0.0, 0.0),
+        },
+    )
+
+    # push_robot = EventTerm(
+    #     func=mdp.push_by_setting_velocity,
+    #     mode="interval",
+    #     interval_range_s=(2.0, 5.0),
+    #     params={"velocity_range": {"x": (-0.5, 0.5), "y": (-0.5, 0.5)}},
+    # )
 
 
 @configclass
