@@ -4,7 +4,7 @@ import torch
 from typing import TYPE_CHECKING, Literal
 
 from isaaclab.managers import SceneEntityCfg
-from isaaclab_assets.robots.unitree import UNITREE_GO2_CFG  # isort: skip
+from isaaclab_assets.robots.unitree import UNITREE_GO2_CFG
 
 
 if TYPE_CHECKING:

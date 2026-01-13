@@ -1,26 +1,35 @@
-# Copyright (c) 2022-2025, The Isaac Lab Project Developers (https://github.com/isaac-sim/IsaacLab/blob/main/CONTRIBUTORS.md).
-# All rights reserved.
-#
-# SPDX-License-Identifier: BSD-3-Clause
-
-"""Configuration for custom terrains."""
+from __future__ import annotations
 
 import isaaclab.terrains as terrain_gen
-from isaaclab.terrains import TerrainGeneratorCfg
+import trimesh
+import numpy as np
+from typing import TYPE_CHECKING
 
-TERRAIN_CFG = TerrainGeneratorCfg(
-    size=(14.0, 14.0),
-    border_width=20.0,
-    num_rows=8,
-    num_cols=8,
-    horizontal_scale=0.1,
-    vertical_scale=0.005,
-    slope_threshold=0.75,
-    use_cache=False,
-    sub_terrains={
-        "random_rough": terrain_gen.HfRandomUniformTerrainCfg(
-            proportion=1.0, noise_range=(0.02, 0.10), noise_step=0.02, border_width=0.25
-        ),
-    },
-)
-"""Rough terrains configuration."""
+if TYPE_CHECKING:
+    from .terrain_cfg import SingleBoxTerrainCfg
+
+
+
+def single_box_terrain(
+    difficulty: float, cfg: SingleBoxTerrainCfg
+    ) -> tuple[list[trimesh.Trimesh], np.ndarray]:
+
+    meshes_list = list()
+    terrain_height = 1.0
+
+    # Generate the top box
+    dim = (cfg.box_size[0], cfg.box_size[1], cfg.box_size[2])
+    pos = (2, 2, cfg.box_size[2]/2 + 2*difficulty)
+    box_mesh = trimesh.creation.box(dim, trimesh.transformations.translation_matrix(pos))
+    meshes_list.append(box_mesh)
+
+    # Generate the ground
+    pos = (0.5 * cfg.size[0], 0.5 * cfg.size[1], -terrain_height / 2)
+    dim = (cfg.size[0], cfg.size[1], terrain_height)
+    ground_mesh = trimesh.creation.box(dim, trimesh.transformations.translation_matrix(pos))
+    meshes_list.append(ground_mesh)
+
+    # specify the origin of the terrain
+    origin = np.array([pos[0], pos[1], 0])
+
+    return meshes_list, origin
