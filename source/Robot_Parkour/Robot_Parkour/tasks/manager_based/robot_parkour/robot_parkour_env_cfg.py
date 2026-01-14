@@ -146,6 +146,12 @@ class ObservationsCfg:
 class EventCfg:
     """Configuration for events."""
 
+    viz_points = EventTerm(
+        func=mdp.debug_visualize_body_points,
+        mode="interval",
+        interval_range_s=(0.1, 0.1),
+    )
+
     motor_strengh = EventTerm(
         func=mdp.randomize_motor_strenght,
         mode="reset",
@@ -261,7 +267,7 @@ class TerminationsCfg:
 @configclass
 class RobotParkourEnvCfg(ManagerBasedRLEnvCfg):
     # Scene settings
-    scene: RobotParkourSceneCfg = RobotParkourSceneCfg(num_envs=512, env_spacing=4)
+    scene: RobotParkourSceneCfg = RobotParkourSceneCfg(num_envs=2048, env_spacing=4)
     # Basic settings
     observations: ObservationsCfg = ObservationsCfg()
     commands: CommandsCfg = CommandsCfg()
