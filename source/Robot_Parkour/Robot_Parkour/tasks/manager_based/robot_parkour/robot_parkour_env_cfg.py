@@ -62,6 +62,19 @@ class RobotParkourSceneCfg(InteractiveSceneCfg):
         ),
     )
 
+    obstacle = AssetBaseCfg(
+        prim_path="{ENV_REGEX_NS}/Obstacle",
+        spawn=sim_utils.CuboidCfg(
+            size=(0.8, 1.0, 0.5),
+            visual_material=sim_utils.PreviewSurfaceCfg(diffuse_color=(1.0, 0.2, 0.2)), # Red Box
+            # Make it Penetrable
+            collision_props=sim_utils.CollisionPropertiesCfg(collision_enabled=False),
+        ),
+        init_state=AssetBaseCfg.InitialStateCfg(
+            pos=(0.0, 0.0, 0.5 / 2)
+        ),
+    )
+
     # depth_camera = TiledCameraCfg(
     #     prim_path="{ENV_REGEX_NS}/Robot/base/camera",
     #     update_period=5, # 10Hz
@@ -247,8 +260,10 @@ class RewardsCfg:
     alive = RewTerm(func=mdp.is_alive, weight=2.0)
 
     # PENETRATE
-    # penetration = RewTerm( ... )
-
+    penetration = RewTerm(
+        func=mdp.penetration_penalty,
+        weight=-1.0,
+    )
 
 
 @configclass
