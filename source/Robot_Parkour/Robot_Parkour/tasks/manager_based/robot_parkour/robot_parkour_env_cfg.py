@@ -7,7 +7,7 @@ import math
 from dataclasses import MISSING
 
 import isaaclab.sim as sim_utils
-from isaaclab.assets import ArticulationCfg, AssetBaseCfg
+from isaaclab.assets import ArticulationCfg, AssetBaseCfg, RigidObjectCfg
 from isaaclab.envs import ManagerBasedRLEnvCfg
 from isaaclab.managers import EventTermCfg as EventTerm
 from isaaclab.managers import ObservationGroupCfg as ObsGroup
@@ -62,17 +62,19 @@ class RobotParkourSceneCfg(InteractiveSceneCfg):
         ),
     )
 
-    obstacle = AssetBaseCfg(
+    obstacle = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/Obstacle",
         spawn=sim_utils.CuboidCfg(
-            size=(0.8, 1.0, 0.5),
-            visual_material=sim_utils.PreviewSurfaceCfg(diffuse_color=(1.0, 0.2, 0.2)), # Red Box
-            # Make it Penetrable
+            size=(1.0, 4.0, 1.0),
+            visual_material=sim_utils.PreviewSurfaceCfg(diffuse_color=(1.0, 0.2, 0.2)),
+            # Penetrable (Visual Only)
             collision_props=sim_utils.CollisionPropertiesCfg(collision_enabled=False),
+            rigid_props=sim_utils.RigidBodyPropertiesCfg(
+                kinematic_enabled=True,
+                disable_gravity=True,
+            ),
         ),
-        init_state=AssetBaseCfg.InitialStateCfg(
-            pos=(0.0, 0.0, 0.5 / 2)
-        ),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=(0.0, 0.0, 0.0)),
     )
 
     # depth_camera = TiledCameraCfg(
@@ -158,6 +160,16 @@ class ObservationsCfg:
 @configclass
 class EventCfg:
     """Configuration for events."""
+
+    reset_obstacle = EventTerm(
+        func=mdp.reset_pos_obstacles,
+        mode="reset",
+        params={
+            "obstacle_cfg": SceneEntityCfg("obstacle"),
+            "pos_xy": (3.0, 0.0),
+            "range_z": (0.2, 0.45)
+        }
+    )
 
     viz_points = EventTerm(
         func=mdp.debug_visualize_body_points,
@@ -260,10 +272,10 @@ class RewardsCfg:
     alive = RewTerm(func=mdp.is_alive, weight=2.0)
 
     # PENETRATE
-    penetration = RewTerm(
-        func=mdp.penetration_penalty,
-        weight=-1.0,
-    )
+    # penetration = RewTerm(
+    #     func=mdp.penetration_penalty,
+    #     weight=-1.0,
+    # )
 
 
 @configclass
