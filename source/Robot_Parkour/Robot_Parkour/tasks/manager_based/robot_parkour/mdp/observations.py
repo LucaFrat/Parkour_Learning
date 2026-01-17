@@ -3,6 +3,7 @@ from __future__ import annotations
 import torch
 from typing import TYPE_CHECKING
 import numpy as np
+import torch.nn.functional as F
 
 from isaaclab.managers import SceneEntityCfg
 from isaaclab.utils.math import euler_xyz_from_quat, quat_apply_inverse
@@ -64,6 +65,75 @@ def terrain_friction(
     ) -> torch.Tensor:
 
     robot = env.scene[asset_cfg.name]
-
     friction = robot.root_physx_view.get_material_properties()[:, :, :2]
-    return torch.tensor(friction[:, 0, :], device=env.device)
+
+    return friction[:, 0, :].to(env.device)
+
+
+def distance_from_obstacle(
+    env: ManagerBasedRLEnv,
+    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+    obstacle_cfg: SceneEntityCfg = SceneEntityCfg("obstacle")
+    ) -> torch.Tensor:
+
+    robot = env.scene[asset_cfg.name]
+    obstacle = env.scene[obstacle_cfg.name]
+
+    robot_pos_x = robot.data.root_pos_w[:, 0]
+    obstacle_pos_x = obstacle.data.root_pos_w[:, 0]
+    obstacle_size_x = obstacle.cfg.spawn.size[0]
+
+    obstacle_front_x = obstacle_pos_x - (obstacle_size_x / 2.0)
+
+    distance_x = obstacle_front_x - robot_pos_x
+
+    return distance_x.unsqueeze(1)
+
+
+def height_obstacle(
+    env: ManagerBasedRLEnv,
+    obstacle_cfg: SceneEntityCfg = SceneEntityCfg("obstacle")
+    ) -> torch.Tensor:
+    """ Here the logic comes from the positioning of the obstacles in
+    the scene. In the event reset_pos_obstacles are the details
+    """
+
+    obstacle = env.scene[obstacle_cfg.name]
+    env_origins_z = env.scene.env_origins[:, 2]
+
+    obstacle_pos_z = obstacle.data.root_pos_w[:, 2]
+    obstacle_height = obstacle.cfg.spawn.size[2]
+
+    obstacle_pos_z_local = obstacle_pos_z - env_origins_z
+
+    height = obstacle_pos_z_local + (obstacle_height / 2.0)
+
+    return height.unsqueeze(1)
+
+
+def width_obstacle(
+    env: ManagerBasedRLEnv,
+    obstacle_cfg: SceneEntityCfg = SceneEntityCfg("obstacle")
+    ) -> torch.Tensor:
+
+    obstacle = env.scene[obstacle_cfg.name]
+    obstacle_width = obstacle.cfg.spawn.size[1]
+
+    return obstacle_width * torch.ones(env.scene.num_envs, device=env.device).unsqueeze(1)
+
+
+def one_hot_category(
+    env: ManagerBasedRLEnv,
+    category_id: int = 0,
+    num_categories: int = 4
+    ) -> torch.Tensor:
+
+    indices = torch.full((env.num_envs,), category_id, device=env.device, dtype=torch.long)
+
+    # 2. Convert to One-Hot encoding
+    # shape: (num_envs, num_categories)
+    one_hot = F.one_hot(indices, num_classes=num_categories)
+    print(one_hot[2, :])
+
+    # 3. Convert to Float (Observations must be float for the policy)
+    return one_hot.float()

@@ -69,8 +69,7 @@ def reset_pos_obstacles(
     obstacle: RigidObject = env.scene[obstacle_cfg.name]
     root_state = obstacle.data.default_root_state[env_ids].clone()
 
-    # consider the height of the obstacle = 1.0
-    height_of_obstacle = 1.0
+    height_of_obstacle = obstacle.cfg.spawn.size[2]
 
     pos_x, pos_y = pos_xy
     min_z, max_z = range_z

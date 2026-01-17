@@ -151,6 +151,17 @@ class ObservationsCfg:
     @configclass
     class Privileged_Visual(ObsGroup):
         """Privileged Visual Information"""
+
+        distance_obstacle = ObsTerm(func=mdp.distance_from_obstacle)
+        height_obstacle = ObsTerm(func=mdp.height_obstacle)
+        width_obstacle = ObsTerm(func=mdp.width_obstacle)
+        category = ObsTerm(
+            func=mdp.one_hot_category,
+            params={
+                "category_id": 0,
+                "num_categories": 4
+            })
+
         def __post_init__(self) -> None:
             self.enable_corruption = False
             self.concatenate_terms = True
@@ -159,7 +170,7 @@ class ObservationsCfg:
     # observation groups
     policy: PolicyCfg = PolicyCfg()
     physics: Privileged_Physical = Privileged_Physical()
-    # visual: Privileged_Visual = Privileged_Visual()
+    visual: Privileged_Visual = Privileged_Visual()
 
 
 @configclass
