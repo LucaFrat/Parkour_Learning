@@ -139,6 +139,10 @@ class ObservationsCfg:
     @configclass
     class Privileged_Physical(ObsGroup):
         """Privileged Physical Information"""
+
+        center_of_mass = ObsTerm(func=mdp.center_of_mass)
+        motor_strength = ObsTerm(func=mdp.motor_strength)
+
         def __post_init__(self) -> None:
             self.enable_corruption = False
             self.concatenate_terms = True
@@ -153,7 +157,7 @@ class ObservationsCfg:
 
     # observation groups
     policy: PolicyCfg = PolicyCfg()
-    # physics: Privileged_Physical = Privileged_Physical()
+    physics: Privileged_Physical = Privileged_Physical()
     # visual: Privileged_Visual = Privileged_Visual()
 
 

@@ -48,8 +48,8 @@ class PPORunnerGRUCfg(RslRlOnPolicyRunnerCfg):
     num_steps_per_env = 24
     max_iterations = 1500
     obs_groups = {
-            "policy": ["policy"],
-            "critic": ["policy"],
+            "policy": ["policy", "physics"],
+            "critic": ["policy", "physics"],
         }
     save_interval = 150
     experiment_name = "parkour_gru"
