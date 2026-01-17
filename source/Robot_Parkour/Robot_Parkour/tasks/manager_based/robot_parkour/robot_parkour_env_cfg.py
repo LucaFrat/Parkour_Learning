@@ -66,7 +66,7 @@ class RobotParkourSceneCfg(InteractiveSceneCfg):
         prim_path="{ENV_REGEX_NS}/Obstacle",
         spawn=sim_utils.CuboidCfg(
             size=(1.0, 4.0, 1.0),
-            visual_material=sim_utils.PreviewSurfaceCfg(diffuse_color=(1.0, 0.2, 0.2)),
+            visual_material=sim_utils.PreviewSurfaceCfg(diffuse_color=(1.0, 0.2, 0.2), opacity=1.0),
             # Penetrable (Visual Only)
             collision_props=sim_utils.CollisionPropertiesCfg(collision_enabled=False),
             rigid_props=sim_utils.RigidBodyPropertiesCfg(
@@ -166,15 +166,9 @@ class EventCfg:
         mode="reset",
         params={
             "obstacle_cfg": SceneEntityCfg("obstacle"),
-            "pos_xy": (0.5, 0.0),
+            "pos_xy": (3.0, 0.0),
             "range_z": (0.2, 0.45)
         }
-    )
-
-    viz_points = EventTerm(
-        func=mdp.debug_visualize_body_points,
-        mode="interval",
-        interval_range_s=(0.1, 0.1),
     )
 
     motor_strengh = EventTerm(
@@ -274,7 +268,12 @@ class RewardsCfg:
     # PENETRATE
     penetration = RewTerm(
         func=mdp.obstacle_penetration,
-        weight=-1.0,
+        weight= -1.0,
+        params={
+            "weight_violation": 1e-2,
+            "weight_depth": 1e-2,
+            "debug_vis": False,
+        }
     )
 
 
@@ -294,7 +293,7 @@ class TerminationsCfg:
 @configclass
 class RobotParkourEnvCfg(ManagerBasedRLEnvCfg):
     # Scene settings
-    scene: RobotParkourSceneCfg = RobotParkourSceneCfg(num_envs=8, env_spacing=4)
+    scene: RobotParkourSceneCfg = RobotParkourSceneCfg(num_envs=2048, env_spacing=4)
     # Basic settings
     observations: ObservationsCfg = ObservationsCfg()
     commands: CommandsCfg = CommandsCfg()

@@ -1,8 +1,9 @@
 import torch
 import itertools
-from isaaclab.markers import VisualizationMarkers
+from isaaclab.markers import VisualizationMarkers, VisualizationMarkersCfg
 from isaaclab.markers.config import SPHERE_MARKER_CFG
 from isaaclab.utils.math import quat_from_euler_xyz, quat_apply
+import isaaclab.sim as sim_utils
 
 
 
@@ -14,9 +15,23 @@ class PenetrationManager:
         self.cfg = measure_points_cfg
 
         # --- Visualization Setup ---
-        marker_cfg = SPHERE_MARKER_CFG.copy()
-        marker_cfg.markers["sphere"].radius = 0.015
-        marker_cfg.prim_path = "/Visuals/BodyPoints"
+        # marker_cfg = SPHERE_MARKER_CFG.copy()
+        # marker_cfg.markers["sphere"].radius = 0.015
+        # marker_cfg.prim_path = "/Visuals/BodyPoints"
+
+        marker_cfg = VisualizationMarkersCfg(
+                prim_path="/Visuals/BodyPoints",
+                markers={
+                    "marker_red": sim_utils.SphereCfg(
+                        radius=0.01,
+                        visual_material=sim_utils.PreviewSurfaceCfg(diffuse_color=(0.0, 1.0, 0.0)),
+                    ),
+                    "marker_green": sim_utils.SphereCfg(
+                        radius=0.01,
+                        visual_material=sim_utils.PreviewSurfaceCfg(diffuse_color=(1.0, 0.0, 0.0)),
+                    ),
+                }
+            )
         self.visualizer = VisualizationMarkers(marker_cfg)
 
         self._init_body_points_vectorized()
@@ -66,6 +81,7 @@ class PenetrationManager:
         self.total_points = len(self.all_local_points)
         print(f"[PenetrationManager] Optimized: Managing {self.total_points} points total.")
 
+
     def compute_world_points(self, env_ids=None):
         """
         Vectorized computation of world points.
@@ -101,15 +117,15 @@ class PenetrationManager:
         return world_pts
 
 
-    def which_points_penetrating_obstacle(self):
 
-        points = self.compute_world_points().view(self.env.scene.num_envs, -1, 3)
-        # print(points.shape)
-
-
-    def visualize(self, env_ids=None):
+    def visualize(self, is_inside_list=None, env_ids=None):
         if not self.visualizer.is_visible():
             return
 
+        if env_ids == None:
+            env_ids = torch.arange(0, self.env.scene.num_envs, device=self.env.device, dtype=int)
+
         points = self.compute_world_points(env_ids)
-        self.visualizer.visualize(translations=points)
+        is_inside = is_inside_list[env_ids, :].view(-1, 1).squeeze()
+
+        self.visualizer.visualize(translations=points, marker_indices=is_inside)

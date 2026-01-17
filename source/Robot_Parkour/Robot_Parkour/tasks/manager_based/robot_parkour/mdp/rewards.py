@@ -86,15 +86,19 @@ def energy_usage(
 
 def obstacle_penetration(
     env: ManagerBasedRLEnv,
-    obstacle_cfg: SceneEntityCfg = SceneEntityCfg("obstacle")
+    weight_violation: float,
+    weight_depth: float,
+    robot_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+    obstacle_cfg: SceneEntityCfg = SceneEntityCfg("obstacle"),
+    debug_vis: bool = False
     ) -> torch.Tensor:
 
+    robot = env.scene[robot_cfg.name]
     obstacle = env.scene[obstacle_cfg.name]
 
-    # (num_envs, 3)
-    obstacle_center = obstacle.data.root_pos_w.clone()
-    # (3)
-    obstacle_size = obstacle.cfg.spawn.size
+    robot_vel_x = robot.data.root_vel_w[:, 0].squeeze().clone()
+    obstacle_center = obstacle.data.root_pos_w.clone() # (num_envs, 3)
+    obstacle_size = obstacle.cfg.spawn.size # (3)
 
     # fix dimensions
     # (num_envs, 3) -> (num_envs, 1, 3)
@@ -102,8 +106,6 @@ def obstacle_penetration(
     obstacle_size = torch.tensor(obstacle_size, device=env.device).view(1, 1, 3)
 
     half_size = obstacle_size / 2
-    lower_bound = obstacle_center - half_size
-    upper_bound = obstacle_center + half_size
 
     global PENETRATION_MANAGER
 
@@ -115,11 +117,22 @@ def obstacle_penetration(
     # (num_envs, num_points, 3)
     points = PENETRATION_MANAGER.compute_world_points().view(env.scene.num_envs, -1, 3)
 
-    in_bound_mask = (points > lower_bound) & (points < upper_bound)
-    # (num_envs, num_points)
-    is_point_inside = torch.all(in_bound_mask, dim=-1)
+    # DEPTH
+    dist_from_center = torch.abs(points - obstacle_center)
+    # Positive = Inside, Negative = Outside
+    dist_to_face = half_size - dist_from_center
+    min_dist_to_face = torch.min(dist_to_face, dim=-1).values
+    depths = torch.clamp(min_dist_to_face, min=0.0)
+    total_depth = torch.sum(depths, dim=-1)
 
+    # VIOLATIONS
+    is_point_inside = depths > 0.0
     num_penetrating_points = torch.sum(is_point_inside, dim=-1).float()
 
-    # normalize given how many points are on the robot
-    return num_penetrating_points / points.shape[1]
+    # TOTAL
+    penalty = (weight_violation * num_penetrating_points + weight_depth * total_depth) * torch.abs(robot_vel_x)
+
+    if debug_vis:
+        PENETRATION_MANAGER.visualize(is_inside_list=is_point_inside, env_ids=[0])
+
+    return penalty
