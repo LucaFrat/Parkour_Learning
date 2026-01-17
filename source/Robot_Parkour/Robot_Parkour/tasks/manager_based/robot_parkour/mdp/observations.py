@@ -6,6 +6,8 @@ import numpy as np
 
 from isaaclab.managers import SceneEntityCfg
 from isaaclab.utils.math import euler_xyz_from_quat, quat_apply_inverse
+from isaaclab_assets.robots.unitree import UNITREE_GO2_CFG
+
 
 if TYPE_CHECKING:
     from isaaclab.envs import ManagerBasedRLEnv
@@ -47,4 +49,21 @@ def motor_strength(
     ) -> torch.Tensor:
 
     robot = env.scene[asset_cfg.name]
-    return robot.actuators["base_legs"].effort_limit
+
+    default_strength = UNITREE_GO2_CFG.actuators["base_legs"].effort_limit
+    current_strength = robot.actuators["base_legs"].effort_limit
+
+    scale = current_strength / default_strength
+
+    return scale
+
+
+def terrain_friction(
+    env: ManagerBasedRLEnv,
+    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+    ) -> torch.Tensor:
+
+    robot = env.scene[asset_cfg.name]
+
+    friction = robot.root_physx_view.get_material_properties()[:, :, :2]
+    return torch.tensor(friction[:, 0, :], device=env.device)

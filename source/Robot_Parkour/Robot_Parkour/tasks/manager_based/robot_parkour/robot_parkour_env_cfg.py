@@ -142,6 +142,7 @@ class ObservationsCfg:
 
         center_of_mass = ObsTerm(func=mdp.center_of_mass)
         motor_strength = ObsTerm(func=mdp.motor_strength)
+        terrain_friction = ObsTerm(func=mdp.terrain_friction)
 
         def __post_init__(self) -> None:
             self.enable_corruption = False
@@ -188,7 +189,7 @@ class EventCfg:
         mode="startup",
         params={
             "asset_cfg": SceneEntityCfg("robot", body_names=".*"),
-            "static_friction_range": (0.7, 0.9),
+            "static_friction_range": (0.7, 1.0),
             "dynamic_friction_range": (0.5, 0.7),
             "restitution_range": (0.0, 0.0),
             "num_buckets": 64,
