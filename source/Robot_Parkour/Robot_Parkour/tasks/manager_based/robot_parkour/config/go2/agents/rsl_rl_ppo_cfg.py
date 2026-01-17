@@ -59,6 +59,7 @@ class PPORunnerGRUCfg(RslRlOnPolicyRunnerCfg):
         actor_hidden_dims=[512, 256, 128],
         critic_hidden_dims=[512, 256, 128],
         activation="elu",
+        last_activation="tanh", # I modified the implementation in rsl_rl_library
         rnn_type="gru",
         rnn_hidden_dim=256,
         rnn_num_layers=1
