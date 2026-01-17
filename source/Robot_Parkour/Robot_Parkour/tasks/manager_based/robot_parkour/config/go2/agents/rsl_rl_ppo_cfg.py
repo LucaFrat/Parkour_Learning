@@ -7,6 +7,7 @@ from isaaclab.utils import configclass
 
 from isaaclab_rl.rsl_rl import RslRlOnPolicyRunnerCfg, RslRlPpoActorCriticCfg, RslRlPpoAlgorithmCfg, RslRlPpoActorCriticRecurrentCfg
 
+from Robot_Parkour.tasks.manager_based.robot_parkour.utils.rl_cfg import MyRslRlPpoActorCriticRecurrentCfg
 
 @configclass
 class PPORunnerCfg(RslRlOnPolicyRunnerCfg):
@@ -52,7 +53,7 @@ class PPORunnerGRUCfg(RslRlOnPolicyRunnerCfg):
         }
     save_interval = 150
     experiment_name = "parkour_gru"
-    policy = RslRlPpoActorCriticRecurrentCfg(
+    policy = MyRslRlPpoActorCriticRecurrentCfg(
         init_noise_std=1.0,
         actor_obs_normalization=True,
         critic_obs_normalization=True,
