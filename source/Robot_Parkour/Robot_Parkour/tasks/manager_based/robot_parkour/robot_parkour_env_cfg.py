@@ -166,7 +166,7 @@ class EventCfg:
         mode="reset",
         params={
             "obstacle_cfg": SceneEntityCfg("obstacle"),
-            "pos_xy": (3.0, 0.0),
+            "pos_xy": (0.5, 0.0),
             "range_z": (0.2, 0.45)
         }
     )
@@ -272,10 +272,10 @@ class RewardsCfg:
     alive = RewTerm(func=mdp.is_alive, weight=2.0)
 
     # PENETRATE
-    # penetration = RewTerm(
-    #     func=mdp.penetration_penalty,
-    #     weight=-1.0,
-    # )
+    penetration = RewTerm(
+        func=mdp.obstacle_penetration,
+        weight=-1.0,
+    )
 
 
 @configclass
@@ -294,7 +294,7 @@ class TerminationsCfg:
 @configclass
 class RobotParkourEnvCfg(ManagerBasedRLEnvCfg):
     # Scene settings
-    scene: RobotParkourSceneCfg = RobotParkourSceneCfg(num_envs=2048, env_spacing=4)
+    scene: RobotParkourSceneCfg = RobotParkourSceneCfg(num_envs=8, env_spacing=4)
     # Basic settings
     observations: ObservationsCfg = ObservationsCfg()
     commands: CommandsCfg = CommandsCfg()

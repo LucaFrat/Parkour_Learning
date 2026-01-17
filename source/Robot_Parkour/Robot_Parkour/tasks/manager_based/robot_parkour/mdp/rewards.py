@@ -7,13 +7,19 @@ from __future__ import annotations
 
 import torch
 from typing import TYPE_CHECKING
+import numpy as np
 
 from isaaclab.assets import Articulation
 from isaaclab.managers import SceneEntityCfg
 from isaaclab.utils.math import wrap_to_pi
 
+from Robot_Parkour.tasks.manager_based.robot_parkour.config.go2.config import SimConfig
+from Robot_Parkour.tasks.manager_based.robot_parkour.utils.penetration_points import PenetrationManager
+
 if TYPE_CHECKING:
     from isaaclab.envs import ManagerBasedRLEnv
+
+PENETRATION_MANAGER = None
 
 
 def joint_pos_target_l2(env: ManagerBasedRLEnv, target: float, asset_cfg: SceneEntityCfg) -> torch.Tensor:
@@ -76,3 +82,44 @@ def energy_usage(
 
     value_per_joing = torch.abs(torques*velocities) **2
     return torch.sum(value_per_joing, dim=1)
+
+
+def obstacle_penetration(
+    env: ManagerBasedRLEnv,
+    obstacle_cfg: SceneEntityCfg = SceneEntityCfg("obstacle")
+    ) -> torch.Tensor:
+
+    obstacle = env.scene[obstacle_cfg.name]
+
+    # (num_envs, 3)
+    obstacle_center = obstacle.data.root_pos_w.clone()
+    # (3)
+    obstacle_size = obstacle.cfg.spawn.size
+
+    # fix dimensions
+    # (num_envs, 3) -> (num_envs, 1, 3)
+    obstacle_center = obstacle_center.unsqueeze(1)
+    obstacle_size = torch.tensor(obstacle_size, device=env.device).view(1, 1, 3)
+
+    half_size = obstacle_size / 2
+    lower_bound = obstacle_center - half_size
+    upper_bound = obstacle_center + half_size
+
+    global PENETRATION_MANAGER
+
+    if PENETRATION_MANAGER is None:
+        points_cfg = SimConfig.body_measure_points
+        PENETRATION_MANAGER = PenetrationManager(env, points_cfg)
+        PENETRATION_MANAGER.visualizer.set_visibility(True)
+
+    # (num_envs, num_points, 3)
+    points = PENETRATION_MANAGER.compute_world_points().view(env.scene.num_envs, -1, 3)
+
+    in_bound_mask = (points > lower_bound) & (points < upper_bound)
+    # (num_envs, num_points)
+    is_point_inside = torch.all(in_bound_mask, dim=-1)
+
+    num_penetrating_points = torch.sum(is_point_inside, dim=-1).float()
+
+    # normalize given how many points are on the robot
+    return num_penetrating_points / points.shape[1]

@@ -66,10 +66,14 @@ class PenetrationManager:
         self.total_points = len(self.all_local_points)
         print(f"[PenetrationManager] Optimized: Managing {self.total_points} points total.")
 
-    def compute_world_points(self, env_ids):
+    def compute_world_points(self, env_ids=None):
         """
         Vectorized computation of world points.
         """
+
+        if env_ids == None:
+            env_ids = torch.arange(0, self.env.scene.num_envs, device=self.env.device, dtype=int)
+
         # (Num_Envs, Num_Bodies, 3/4)
         body_pos = self.robot.data.body_pos_w[env_ids]
         body_quat = self.robot.data.body_quat_w[env_ids]
@@ -95,6 +99,12 @@ class PenetrationManager:
 
         # Return shape: (Num_Envs * Total_Points, 3)
         return world_pts
+
+
+    def which_points_penetrating_obstacle(self):
+
+        points = self.compute_world_points().view(self.env.scene.num_envs, -1, 3)
+        # print(points.shape)
 
 
     def visualize(self, env_ids=None):

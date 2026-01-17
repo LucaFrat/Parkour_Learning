@@ -69,7 +69,7 @@ def reset_pos_obstacles(
     obstacle: RigidObject = env.scene[obstacle_cfg.name]
     root_state = obstacle.data.default_root_state[env_ids].clone()
 
-    # consider the height of the obstacle 1.0
+    # consider the height of the obstacle = 1.0
     height_of_obstacle = 1.0
 
     pos_x, pos_y = pos_xy
@@ -88,7 +88,7 @@ def reset_pos_obstacles(
     env_origins = env.scene.env_origins[env_ids]
     root_state[:, 0] = env_origins[:, 0] + x
     root_state[:, 1] = env_origins[:, 1] + y
-    root_state[:, 2] = env_origins[:, 2] - height_of_obstacle/2 + z
+    root_state[:, 2] = env_origins[:, 2] + z - height_of_obstacle/2
 
     obstacle.write_root_pose_to_sim(root_state[:, :7], env_ids=env_ids)
     obstacle.write_root_velocity_to_sim(root_state[:, 7:], env_ids=env_ids)

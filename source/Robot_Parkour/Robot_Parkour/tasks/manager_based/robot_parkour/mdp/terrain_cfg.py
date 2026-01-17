@@ -31,7 +31,7 @@ TERRAIN_CFG = TerrainGeneratorCfg(
     use_cache=False,
     sub_terrains={
         "random_rough": terrain_gen_hf.HfRandomUniformTerrainCfg(
-            proportion=0.2, noise_range=(0.02, 0.10), noise_step=0.02, border_width=0.25
+            proportion=1.0, noise_range=(0.02, 0.10), noise_step=0.02, border_width=0.25
         ),
         # "box": SingleBoxTerrainCfg(
         #     proportion=1.0,
