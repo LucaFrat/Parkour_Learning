@@ -129,11 +129,6 @@ def one_hot_category(
     ) -> torch.Tensor:
 
     indices = torch.full((env.num_envs,), category_id, device=env.device, dtype=torch.long)
-
-    # 2. Convert to One-Hot encoding
-    # shape: (num_envs, num_categories)
     one_hot = F.one_hot(indices, num_classes=num_categories)
-    print(one_hot[2, :])
 
-    # 3. Convert to Float (Observations must be float for the policy)
     return one_hot.float()

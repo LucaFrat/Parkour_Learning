@@ -182,12 +182,12 @@ class EventCfg:
         mode="reset",
         params={
             "obstacle_cfg": SceneEntityCfg("obstacle"),
-            "pos_xy": (3.0, 0.0),
+            "pos_xy": (2.5, 0.0),
             "range_z": (0.2, 0.45)
         }
     )
 
-    motor_strengh = EventTerm(
+    motor_strength = EventTerm(
         func=mdp.randomize_motor_strenght,
         mode="reset",
         params={
@@ -324,7 +324,7 @@ class RobotParkourEnvCfg(ManagerBasedRLEnvCfg):
         """Post initialization."""
         # general settings
         self.decimation = 4
-        self.episode_length_s = 10
+        self.episode_length_s = 20
         # viewer settings
         self.viewer.eye = (8.0, 0.0, 5.0)
         # simulation settings

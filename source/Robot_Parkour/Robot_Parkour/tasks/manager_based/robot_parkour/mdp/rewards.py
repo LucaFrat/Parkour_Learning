@@ -96,7 +96,7 @@ def obstacle_penetration(
     robot = env.scene[robot_cfg.name]
     obstacle = env.scene[obstacle_cfg.name]
 
-    robot_vel_x = robot.data.root_vel_w[:, 0].squeeze().clone()
+    robot_vel_x = torch.abs(robot.data.root_vel_w[:, 0].squeeze().clone())
     obstacle_center = obstacle.data.root_pos_w.clone() # (num_envs, 3)
     obstacle_size = obstacle.cfg.spawn.size # (3)
 
@@ -126,13 +126,13 @@ def obstacle_penetration(
     total_depth = torch.sum(depths, dim=-1)
 
     # VIOLATIONS
-    is_point_inside = depths > 0.0
-    num_penetrating_points = torch.sum(is_point_inside, dim=-1).float()
+    num_penetrating_points = torch.count_nonzero(depths, dim=-1).float()
 
     # TOTAL
-    penalty = (weight_violation * num_penetrating_points + weight_depth * total_depth) * torch.abs(robot_vel_x)
+    penalty = (weight_violation * num_penetrating_points + weight_depth * total_depth) * robot_vel_x
 
     if debug_vis:
+        is_point_inside = depths > 0.0
         PENETRATION_MANAGER.visualize(is_inside_list=is_point_inside, env_ids=[0])
 
     return penalty
