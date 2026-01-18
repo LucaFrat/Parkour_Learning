@@ -1,6 +1,8 @@
 
 import numpy as np
 
+
+
 class SimConfig():
     body_measure_points = { # transform are related to body frame
         "base": dict(

@@ -13,13 +13,14 @@ from isaaclab.managers import EventTermCfg as EventTerm
 from isaaclab.managers import ObservationGroupCfg as ObsGroup
 from isaaclab.managers import ObservationTermCfg as ObsTerm
 from isaaclab.managers import RewardTermCfg as RewTerm
+from isaaclab.managers import CurriculumTermCfg as CurrTerm
 from isaaclab.managers import SceneEntityCfg
 from isaaclab.managers import TerminationTermCfg as DoneTerm
 from isaaclab.scene import InteractiveSceneCfg
 from isaaclab.utils import configclass
 from isaaclab.terrains import TerrainImporterCfg
 from isaaclab.utils.assets import ISAACLAB_NUCLEUS_DIR, ISAAC_NUCLEUS_DIR
-from isaaclab.sensors import TiledCameraCfg, ContactSensorCfg
+from isaaclab.sensors import TiledCameraCfg, ContactSensorCfg, RayCasterCfg, patterns
 from isaaclab.utils.noise import AdditiveUniformNoiseCfg as Unoise
 
 
@@ -77,6 +78,15 @@ class RobotParkourSceneCfg(InteractiveSceneCfg):
         init_state=RigidObjectCfg.InitialStateCfg(pos=(0.0, 0.0, 0.0)),
     )
 
+    height_scanner = RayCasterCfg(
+        prim_path="{ENV_REGEX_NS}/Robot/base",
+        offset=RayCasterCfg.OffsetCfg(pos=(0.0, 0.0, 20.0)),
+        ray_alignment="yaw",
+        pattern_cfg=patterns.GridPatternCfg(resolution=0.1, size=[1.6, 1.0]),
+        debug_vis=False,
+        mesh_prim_paths=["/World/ground"],
+    )
+
     # depth_camera = TiledCameraCfg(
     #     prim_path="{ENV_REGEX_NS}/Robot/base/camera",
     #     update_period=5, # 10Hz
@@ -96,10 +106,10 @@ class CommandsCfg:
 
     forward_velocity = mdp.UniformVelocityCommandCfg(
         asset_name="robot",
-        resampling_time_range=(10.0, 10.0),
+        resampling_time_range=(5.0, 5.0),
         rel_standing_envs=0.02,
         rel_heading_envs=1.0,
-        heading_command=True,
+        heading_command=False,
         heading_control_stiffness=0.5,
         debug_vis=True,
         ranges=mdp.UniformVelocityCommandCfg.Ranges(
@@ -124,11 +134,26 @@ class ObservationsCfg:
     class PolicyCfg(ObsGroup):
         """Observations for policy group."""
 
+        commands = ObsTerm(func=mdp.generated_commands, params={"command_name": "forward_velocity"})
+        height_scan = ObsTerm(
+            func=mdp.height_scan,
+            params={"sensor_cfg": SceneEntityCfg("height_scanner")},
+            noise=Unoise(n_min=-0.1, n_max=0.1),
+            clip=(-1.0, 1.0),
+        )
+
         # proprioceptive R29
-        roll_pitch = ObsTerm(func=mdp.roll_pitch)
+        projected_gravity = ObsTerm(
+            func=mdp.projected_gravity,
+            noise=Unoise(n_min=-0.05, n_max=0.05),
+        )
+        # roll_pitch = ObsTerm(func=mdp.roll_pitch)
         joint_pos_rel = ObsTerm(func=mdp.joint_pos_rel)
         joint_vel_rel = ObsTerm(func=mdp.joint_vel_rel)
-        base_ang_vel = ObsTerm(func=mdp.base_ang_vel, noise=Unoise(n_min=-0.2, n_max=0.2))
+        # base_ang_vel = ObsTerm(func=mdp.base_ang_vel, noise=Unoise(n_min=-0.2, n_max=0.2))
+
+        lin_vel = ObsTerm(func=mdp.root_lin_vel_w)
+        ang_vel = ObsTerm(func=mdp.root_ang_vel_w)
 
         actions = ObsTerm(func=mdp.last_action)
 
@@ -275,7 +300,7 @@ class RewardsCfg:
     # ENERGY
     energy_usage = RewTerm(
         func=mdp.energy_usage,
-        weight= 2e-6
+        weight= -2e-6
     )
 
     # ALIVE
@@ -292,6 +317,9 @@ class RewardsCfg:
         }
     )
 
+    lin_vel_z = RewTerm(func=mdp.lin_vel_z_l2, weight=-2.0)
+    ang_vel_xy = RewTerm(func=mdp.ang_vel_xy_l2, weight=-0.05)
+
 
 @configclass
 class TerminationsCfg:
@@ -302,14 +330,22 @@ class TerminationsCfg:
         func=mdp.illegal_contact,
         params={"sensor_cfg": SceneEntityCfg("contact_forces", body_names="base"), "threshold": 1.0},
     )
+    bad_orientation = DoneTerm(
+        func=mdp.bad_orientation,
+        params={"limit_angle": math.pi / 2}, # Terminate if tilted > 90 degrees
+    )
 
+@configclass
+class CurriculumCfg:
+    """Curriculum terms for the MDP."""
 
+    terrain_levels = CurrTerm(func=mdp.terrain_levels_vel)
 
 
 @configclass
 class RobotParkourEnvCfg(ManagerBasedRLEnvCfg):
     # Scene settings
-    scene: RobotParkourSceneCfg = RobotParkourSceneCfg(num_envs=2048, env_spacing=4)
+    scene: RobotParkourSceneCfg = RobotParkourSceneCfg(num_envs=4096, env_spacing=4)
     # Basic settings
     observations: ObservationsCfg = ObservationsCfg()
     commands: CommandsCfg = CommandsCfg()
@@ -318,6 +354,7 @@ class RobotParkourEnvCfg(ManagerBasedRLEnvCfg):
     # MDP settings
     rewards: RewardsCfg = RewardsCfg()
     terminations: TerminationsCfg = TerminationsCfg()
+    # curriculums: CurriculumCfg = CurriculumCfg()
 
     # Post initialization
     def __post_init__(self) -> None:
@@ -328,5 +365,7 @@ class RobotParkourEnvCfg(ManagerBasedRLEnvCfg):
         # viewer settings
         self.viewer.eye = (8.0, 0.0, 5.0)
         # simulation settings
-        self.sim.dt = 1 / 120
+        self.sim.dt = 0.005
         self.sim.render_interval = self.decimation
+        self.sim.physics_material = self.scene.terrain.physics_material
+        self.sim.physx.gpu_max_rigid_patch_count = 10 * 2**15

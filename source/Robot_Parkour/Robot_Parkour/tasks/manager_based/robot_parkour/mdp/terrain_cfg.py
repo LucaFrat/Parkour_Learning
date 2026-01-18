@@ -30,6 +30,7 @@ TERRAIN_CFG = TerrainGeneratorCfg(
     slope_threshold=0.75,
     use_cache=False,
     sub_terrains={
+        # "flat": terrain_gen_trimesh.MeshPlaneTerrainCfg(),
         "random_rough": terrain_gen_hf.HfRandomUniformTerrainCfg(
             proportion=1.0, noise_range=(0.02, 0.10), noise_step=0.02, border_width=0.25
         ),
