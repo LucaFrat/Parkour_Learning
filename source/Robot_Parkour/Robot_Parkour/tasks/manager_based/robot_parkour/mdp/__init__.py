@@ -13,3 +13,4 @@ from .terrain_cfg import *
 from .observations import *
 from .events import *
 from .curriculums import *
+from .commands import *
