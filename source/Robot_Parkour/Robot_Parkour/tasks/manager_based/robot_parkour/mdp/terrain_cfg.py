@@ -31,17 +31,17 @@ TERRAIN_CFG = TerrainGeneratorCfg(
     use_cache=False,
     sub_terrains={
         # "flat": terrain_gen_trimesh.MeshPlaneTerrainCfg(),
-        # "random_rough": terrain_gen_hf.HfRandomUniformTerrainCfg(
-        #     proportion=1.0, noise_range=(0.01, 0.08), noise_step=0.01, border_width=0.25
-        # ),
+        "random_rough": terrain_gen_hf.HfRandomUniformTerrainCfg(
+            proportion=1.0, noise_range=(0.01, 0.08), noise_step=0.01, border_width=0.25
+        ),
         # "box": SingleBoxTerrainCfg(
         #     proportion=1.0,
         # )
         # "boxes": terrain_gen_trimesh.MeshRandomGridTerrainCfg(
         #     proportion=0.2, grid_width=0.45, grid_height_range=(0.05, 0.2), platform_width=2.0
         # ),
-        "random": terrain_gen_trimesh.MeshRandomGridTerrainCfg(
-            proportion=0.4, grid_width=0.09, grid_height_range=(0.01, 0.05), platform_width=1.5
-        )
+        # "random": terrain_gen_trimesh.MeshRandomGridTerrainCfg(
+        #     proportion=0.4, grid_width=0.09, grid_height_range=(0.01, 0.05), platform_width=1.5
+        # )
     },
 )

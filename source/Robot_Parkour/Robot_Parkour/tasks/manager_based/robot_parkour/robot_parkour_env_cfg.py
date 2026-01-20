@@ -37,7 +37,7 @@ class RobotParkourSceneCfg(InteractiveSceneCfg):
         prim_path="/World/ground",
         terrain_type="generator",
         terrain_generator=mdp.TERRAIN_CFG,
-        max_init_terrain_level=5,
+        max_init_terrain_level=1,
         collision_group=-1,
         physics_material=sim_utils.RigidBodyMaterialCfg(
             friction_combine_mode="multiply",
@@ -114,7 +114,7 @@ class CommandsCfg:
         heading_command=False,
         heading_control_stiffness=0.5,
         debug_vis=True,
-        debug_goal_vis=True,
+        debug_goal_vis=False,
         ranges=mdp.UniformVelocityCommandCfg.Ranges(
             lin_vel_x=(-1, 1.5), lin_vel_y=(-1., 1.), ang_vel_z=(-2., 2.), heading=(0., 0.)
         ),
@@ -348,7 +348,7 @@ class CurriculumCfg:
 @configclass
 class RobotParkourEnvCfg(ManagerBasedRLEnvCfg):
     # Scene settings
-    scene: RobotParkourSceneCfg = RobotParkourSceneCfg(num_envs=4096, env_spacing=4)
+    scene: RobotParkourSceneCfg = RobotParkourSceneCfg(num_envs=4096, env_spacing=2.5)
     # Basic settings
     observations: ObservationsCfg = ObservationsCfg()
     commands: CommandsCfg = CommandsCfg()

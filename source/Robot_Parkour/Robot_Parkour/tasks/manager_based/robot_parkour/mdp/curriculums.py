@@ -53,25 +53,23 @@ def terrain_levels(
     obstacle_pos = obstacle_pos_w - env_origin_w
     obstacle_robot_distance = torch.norm(obstacle_pos_w - robot_pos_w, dim=-1)
 
+    # CONDITIONS
     # cosine similarity
     cos_similarity = F.cosine_similarity(robot_pos, obstacle_pos, dim=-1)
     condition_1 = cos_similarity > 0.
-
     # robot close to obstacle
     condition_2 = torch.norm(obstacle_robot_distance, dim=-1) < 1.
-
     # robot after obstacle
     condition_3 = torch.norm(robot_pos, dim=-1) > torch.norm(obstacle_pos, dim=-1)
-
     condition_4 = torch.logical_not(condition_1)
-
     # robot is closer than 1.0 meters to the origin
     condition_5 = torch.norm(robot_pos, dim=-1) < 1.
 
+    # CHANGE DIFFICULTY
     move_up = condition_1 & condition_2 & condition_3
     move_down = condition_4 & condition_5
 
     move_down *= ~move_up
-
     terrain.update_env_origins(env_ids, move_up, move_down)
+
     return torch.mean(terrain.terrain_levels.float())

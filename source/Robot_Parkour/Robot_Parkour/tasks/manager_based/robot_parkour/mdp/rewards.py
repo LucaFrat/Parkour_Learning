@@ -11,7 +11,7 @@ import numpy as np
 
 from isaaclab.assets import Articulation
 from isaaclab.managers import SceneEntityCfg
-from isaaclab.utils.math import wrap_to_pi
+from isaaclab.utils.math import wrap_to_pi, quat_apply_inverse
 
 from Robot_Parkour.tasks.manager_based.robot_parkour.config.go2.config import SimConfig
 from Robot_Parkour.tasks.manager_based.robot_parkour.utils.penetration_points import PenetrationManager
@@ -41,10 +41,10 @@ def forward_velocity(
     robot = env.scene[asset_cfg.name]
     command = env.command_manager.get_command(command_name)
 
-    command_x = command[:, 0]
-    robot_vel_x = robot.data.root_lin_vel_w[:, 0]
+    command_vel_x = command[:, 0]
+    robot_vel_b = robot.data.root_lin_vel_b[:, 0]
 
-    return torch.norm(command_x - robot_vel_x)
+    return torch.abs(command_vel_x - robot_vel_b)
 
 
 def lateral_velocity(
@@ -53,9 +53,9 @@ def lateral_velocity(
     ) -> torch.Tensor:
 
     robot = env.scene[asset_cfg.name]
-    robot_vel_y = robot.data.root_lin_vel_w[:, 1]
+    robot_vel_b = robot.data.root_lin_vel_b[:, 1]
 
-    return torch.norm(robot_vel_y) ** 2
+    return torch.square(robot_vel_b)
 
 
 def yaw_rate(
@@ -64,10 +64,15 @@ def yaw_rate(
     ) -> torch.Tensor:
 
     robot = env.scene[asset_cfg.name]
-    robot_yaw_rate = robot.data.root_ang_vel_w[:, 2]
-    robot_yaw_rate_norm = torch.norm(robot_yaw_rate)
+    # robot_yaw_rate = robot.data.root_ang_vel_b[:, 2]
+    # robot_yaw_rate_norm = torch.abs(robot_yaw_rate)
 
-    return torch.exp(-robot_yaw_rate_norm)
+    robot_yaw = robot.data.root_ang_vel_b[:, 2]
+    robot_yaw[robot_yaw > np.pi] -= np.pi * 2 # to range (-pi, pi)
+    robot_yaw[robot_yaw < -np.pi] += np.pi * 2 # to range (-pi, pi)
+
+    return torch.abs(robot_yaw)
+
 
 
 def energy_usage(

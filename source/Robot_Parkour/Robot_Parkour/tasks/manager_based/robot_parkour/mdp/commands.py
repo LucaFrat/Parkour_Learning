@@ -35,6 +35,8 @@ class GoalBasedVelocityCommand(UniformVelocityCommand):
                         visual_material=sim_utils.PreviewSurfaceCfg(diffuse_color=(0.0, 1.0, 0.0)),
                     )})
         self.visualizer = VisualizationMarkers(marker_cfg)
+        self.visualizer.set_visibility(False)
+
 
     def _resample_command(self, env_ids: torch.Tensor):
         robot_pos_w = self.robot.data.root_pos_w[env_ids, :]
