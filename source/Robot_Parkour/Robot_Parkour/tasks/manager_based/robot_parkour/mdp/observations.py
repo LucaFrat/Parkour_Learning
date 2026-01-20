@@ -78,14 +78,17 @@ def distance_from_obstacle(
 
     robot = env.scene[asset_cfg.name]
     obstacle = env.scene[obstacle_cfg.name]
+    env_origin_x = env.scene.env_origins[:, 0]
 
     robot_pos_x = robot.data.root_pos_w[:, 0]
     obstacle_pos_x = obstacle.data.root_pos_w[:, 0]
     obstacle_size_x = obstacle.cfg.spawn.size[0]
 
-    obstacle_front_x = obstacle_pos_x - (obstacle_size_x / 2.0)
+    robot_pos = robot_pos_x - env_origin_x
+    obstacle_pos = obstacle_pos_x - env_origin_x
+    obstacle_front_x = obstacle_pos - (obstacle_size_x / 2.0)
 
-    distance_x = obstacle_front_x - robot_pos_x
+    distance_x = obstacle_front_x - robot_pos
 
     return distance_x.unsqueeze(1)
 

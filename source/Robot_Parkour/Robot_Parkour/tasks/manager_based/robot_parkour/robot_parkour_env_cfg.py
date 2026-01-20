@@ -74,6 +74,7 @@ class RobotParkourSceneCfg(InteractiveSceneCfg):
                 kinematic_enabled=True,
                 disable_gravity=True,
             ),
+            physics_material=None
         ),
         init_state=RigidObjectCfg.InitialStateCfg(pos=(0.0, 0.0, 0.0)),
     )
@@ -108,7 +109,7 @@ class CommandsCfg:
         asset_name="robot",
         obstacle_cfg=SceneEntityCfg("obstacle"),
         goal_distance_behind_obstacle=1.0,
-        resampling_time_range=(5., 5.),
+        resampling_time_range=(0.1, 0.1),
         rel_standing_envs=0.02,
         rel_heading_envs=1.0,
         heading_command=False,
@@ -210,7 +211,7 @@ class EventCfg:
         mode="reset",
         params={
             "obstacle_cfg": SceneEntityCfg("obstacle"),
-            "pos_xy": (2.5, 0.0),
+            "pos_xy": (2.0, 0.0),
             "range_z": (0.2, 0.45)
         }
     )
@@ -288,7 +289,7 @@ class RewardsCfg:
     # FORWARD
     forward_velocity = RewTerm(
         func=mdp.forward_velocity,
-        weight= -10.0,
+        weight= -1.,
         params={"command_name": "forward_velocity"}
     )
     lateral_velocity = RewTerm(
@@ -307,12 +308,12 @@ class RewardsCfg:
     )
 
     # ALIVE
-    alive = RewTerm(func=mdp.is_alive, weight=2.0)
+    alive = RewTerm(func=mdp.is_alive, weight=1.5)
 
     # PENETRATE
     penetration = RewTerm(
         func=mdp.obstacle_penetration,
-        weight= -1.0,
+        weight= 0.0,
         params={
             "weight_violation": 1e-2,
             "weight_depth": 1e-2,
@@ -335,14 +336,16 @@ class TerminationsCfg:
     )
     bad_orientation = DoneTerm(
         func=mdp.bad_orientation,
-        params={"limit_angle": math.pi / 2}, # Terminate if tilted > 90 degrees
+        params={"limit_angle": math.pi * 0.8}, # Terminate if tilted > 90 degrees
     )
+
 
 @configclass
 class CurriculumCfg:
     """Curriculum terms for the MDP."""
 
     terrain_levels = CurrTerm(func=mdp.terrain_levels)
+
 
 
 @configclass
@@ -364,7 +367,7 @@ class RobotParkourEnvCfg(ManagerBasedRLEnvCfg):
         """Post initialization."""
         # general settings
         self.decimation = 4
-        self.episode_length_s = 20
+        self.episode_length_s = 10
         # viewer settings
         self.viewer.eye = (8.0, 0.0, 5.0)
         # simulation settings

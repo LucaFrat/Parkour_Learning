@@ -64,8 +64,6 @@ def yaw_rate(
     ) -> torch.Tensor:
 
     robot = env.scene[asset_cfg.name]
-    # robot_yaw_rate = robot.data.root_ang_vel_b[:, 2]
-    # robot_yaw_rate_norm = torch.abs(robot_yaw_rate)
 
     robot_yaw = robot.data.root_ang_vel_b[:, 2]
     robot_yaw[robot_yaw > np.pi] -= np.pi * 2 # to range (-pi, pi)
@@ -101,7 +99,7 @@ def obstacle_penetration(
     robot = env.scene[robot_cfg.name]
     obstacle = env.scene[obstacle_cfg.name]
 
-    robot_vel_x = torch.abs(robot.data.root_vel_w[:, 0].squeeze().clone())
+    robot_vel_x = torch.abs(robot.data.root_lin_vel_b[:, 0].squeeze().clone())
     obstacle_center = obstacle.data.root_pos_w.clone() # (num_envs, 3)
     obstacle_size = obstacle.cfg.spawn.size # (3)
 

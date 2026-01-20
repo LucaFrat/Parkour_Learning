@@ -44,9 +44,9 @@ class PPORunnerCfg(RslRlOnPolicyRunnerCfg):
 
 
 @configclass
-class PPORunnerGRUCfg(RslRlOnPolicyRunnerCfg):
+class PPORunnerFieldSoftCfg(RslRlOnPolicyRunnerCfg):
     num_steps_per_env = 24
-    max_iterations = 1500
+    max_iterations = 3000
     obs_groups = {
             "policy": ["policy", "physics", "visual"],
             "critic": ["policy", "physics", "visual"],
@@ -79,3 +79,11 @@ class PPORunnerGRUCfg(RslRlOnPolicyRunnerCfg):
         desired_kl=0.01,
         max_grad_norm=1.0,
     )
+
+
+@configclass
+class PPORunnerFieldHardCfg(PPORunnerFieldSoftCfg):
+    max_iterations=1500
+    resume=True
+    load_run="2026-01-20_21-30-20"
+    load_checkpoint="model_300.pt"
