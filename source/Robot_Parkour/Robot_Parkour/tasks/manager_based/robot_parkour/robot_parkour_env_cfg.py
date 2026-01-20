@@ -288,7 +288,7 @@ class RewardsCfg:
     # FORWARD
     forward_velocity = RewTerm(
         func=mdp.forward_velocity,
-        weight= -1.0,
+        weight= -10.0,
         params={"command_name": "forward_velocity"}
     )
     lateral_velocity = RewTerm(
