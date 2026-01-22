@@ -5,6 +5,7 @@ import isaaclab.sim as sim_utils
 from Robot_Parkour.tasks.manager_based.robot_parkour.robot_parkour_env_cfg import RobotParkourEnvCfg
 from isaaclab_assets.robots.unitree import UNITREE_GO2_CFG  # isort: skip
 
+from Robot_Parkour.tasks.manager_based.robot_parkour.config.go2.env_cfg import TERRAIN_CFG_HARD
 
 # SOFT
 @configclass
@@ -20,18 +21,21 @@ class Go2FieldSoftEnvCfg(RobotParkourEnvCfg):
 class Go2FieldHardEnvCfg(Go2FieldSoftEnvCfg):
     def __post_init__(self):
         super().__post_init__()
+        self.scene.terrain.cfg.terrain_generator = TERRAIN_CFG_HARD
         self.scene.obstacle.spawn.physics_material = sim_utils.RigidBodyMaterialCfg(
                 static_friction=1.0,
                 dynamic_friction=1.0,
                 restitution=0.0,
             )
-        self.scene.obstacle.spawn.collision_props.collision_enabled = True
+        # self.scene.obstacle.spawn.collision_props.collision_enabled = True
         self.rewards.penetration.weight = 0.0
 
 
 
 
 # PLAY --------------------------------------
+
+
 @configclass
 class Go2FieldSoftEnvCfg_Play(Go2FieldSoftEnvCfg):
     def __post_init__(self):

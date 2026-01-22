@@ -36,7 +36,7 @@ class RobotParkourSceneCfg(InteractiveSceneCfg):
     terrain = TerrainImporterCfg(
         prim_path="/World/ground",
         terrain_type="generator",
-        terrain_generator=mdp.TERRAIN_CFG,
+        terrain_generator=mdp.TERRAIN_CFG_SOFT,
         max_init_terrain_level=1,
         collision_group=-1,
         physics_material=sim_utils.RigidBodyMaterialCfg(
@@ -108,14 +108,14 @@ class CommandsCfg:
     forward_velocity = mdp.GoalBasedVelocityCommandCfg(
         asset_name="robot",
         obstacle_cfg=SceneEntityCfg("obstacle"),
-        goal_distance_behind_obstacle=1.0,
+        goal_distance_behind_obstacle=2.0,
         resampling_time_range=(0.1, 0.1),
         rel_standing_envs=0.02,
         rel_heading_envs=1.0,
         heading_command=False,
         heading_control_stiffness=0.5,
         debug_vis=True,
-        debug_goal_vis=False,
+        debug_goal_vis=True,
         ranges=mdp.UniformVelocityCommandCfg.Ranges(
             lin_vel_x=(-1, 1.5), lin_vel_y=(-1., 1.), ang_vel_z=(-2., 2.), heading=(0., 0.)
         ),
@@ -126,8 +126,18 @@ class CommandsCfg:
 class ActionsCfg:
     """Action specifications for the MDP."""
 
-    joint_pos_hips = mdp.JointPositionActionCfg(asset_name="robot", joint_names=[".*hip_joint"], scale=0.4, use_default_offset=True)
-    joint_pos_thigh_knee = mdp.JointPositionActionCfg(asset_name="robot", joint_names=[".*thigh_joint", ".*calf_joint"], scale=0.6, use_default_offset=True)
+    joint_pos_hips = mdp.JointPositionActionCfg(
+        asset_name="robot",
+        joint_names=[".*hip_joint"],
+        scale=0.25,
+        use_default_offset=True
+    )
+    joint_pos_thigh_knee = mdp.JointPositionActionCfg(
+        asset_name="robot",
+        joint_names=[".*thigh_joint", ".*calf_joint"],
+        scale=0.25,
+        use_default_offset=True
+    )
 
 
 @configclass
@@ -138,13 +148,13 @@ class ObservationsCfg:
     class PolicyCfg(ObsGroup):
         """Observations for policy group."""
 
-        commands = ObsTerm(func=mdp.generated_commands, params={"command_name": "forward_velocity"})
         height_scan = ObsTerm(
             func=mdp.height_scan,
             params={"sensor_cfg": SceneEntityCfg("height_scanner")},
             noise=Unoise(n_min=-0.1, n_max=0.1),
             clip=(-1.0, 1.0),
         )
+        commands = ObsTerm(func=mdp.generated_commands, params={"command_name": "forward_velocity"})
 
         # proprioceptive R29
         projected_gravity = ObsTerm(
@@ -212,7 +222,7 @@ class EventCfg:
         params={
             "obstacle_cfg": SceneEntityCfg("obstacle"),
             "pos_xy": (2.0, 0.0),
-            "range_z": (0.2, 0.45)
+            "range_z": (0.01, 0.45)
         }
     )
 
@@ -280,25 +290,41 @@ class EventCfg:
         },
     )
 
+    push_robot = EventTerm(
+        func=mdp.push_by_setting_velocity,
+        mode="interval",
+        interval_range_s=(2.0, 5.0),
+        params={"velocity_range": {"x": (-0.3, 0.3), "y": (-0.3, 0.3)}},
+    )
+
 
 
 @configclass
 class RewardsCfg:
     """Reward terms for the MDP."""
 
+    track_lin_vel_xy_exp = RewTerm(
+        func=mdp.track_lin_vel_xy_exp, weight=5.0, params={"command_name": "forward_velocity", "std": math.sqrt(0.25)}
+    )
+    # track_lin_vel_xy_exp = RewTerm(
+    #     func=mdp.track_lin_vel_xy_yaw_frame_exp, weight=15.0, params={"command_name": "forward_velocity", "std": math.sqrt(0.25)}
+    # )
+    # track_ang_vel_z_exp = RewTerm(
+    #     func=mdp.track_ang_vel_z_exp, weight=2.0, params={"command_name": "forward_velocity", "std": math.sqrt(0.25)}
+    # )
     # FORWARD
-    forward_velocity = RewTerm(
-        func=mdp.forward_velocity,
-        weight= -1.,
-        params={"command_name": "forward_velocity"}
-    )
-    lateral_velocity = RewTerm(
-        func=mdp.lateral_velocity,
-        weight= -1.0
-    )
+    # forward_velocity = RewTerm(
+    #     func=mdp.forward_velocity,
+    #     weight= 5.0,
+    #     params={"command_name": "forward_velocity"}
+    # )
+    # lateral_velocity = RewTerm(
+    #     func=mdp.lateral_velocity,
+    #     weight= -1.0
+    # )
     yaw_rate = RewTerm(
         func=mdp.yaw_rate,
-        weight= 0.1
+        weight= 0.5
     )
 
     # ENERGY
@@ -308,21 +334,40 @@ class RewardsCfg:
     )
 
     # ALIVE
-    alive = RewTerm(func=mdp.is_alive, weight=1.5)
+    alive = RewTerm(func=mdp.is_alive, weight=2.0)
 
     # PENETRATE
     penetration = RewTerm(
         func=mdp.obstacle_penetration,
-        weight= 0.0,
+        weight= -1.0,
         params={
-            "weight_violation": 1e-2,
-            "weight_depth": 1e-2,
+            "weight_violation": 1e-3,
+            "weight_depth": 1e-3,
             "debug_vis": False,
         }
     )
 
-    lin_vel_z = RewTerm(func=mdp.lin_vel_z_l2, weight=-2.0)
-    ang_vel_xy = RewTerm(func=mdp.ang_vel_xy_l2, weight=-0.05)
+    # termination_penalty = RewTerm(func=mdp.is_terminated, weight=-100.0)
+
+    # undesired_contacts = RewTerm(
+    #     func=mdp.undesired_contacts,
+    #     weight=-1.0,
+    #     params={"sensor_cfg": SceneEntityCfg("contact_forces", body_names=".*thigh"), "threshold": 1.0},
+    # )
+
+    # feet_air_time = RewTerm(
+    #     func=mdp.feet_air_time,
+    #     weight=0.125,
+    #     params={
+    #         "sensor_cfg": SceneEntityCfg("contact_forces", body_names=".*foot"),
+    #         "command_name": "forward_velocity",
+    #         "threshold": 0.5,
+    #     },
+    # )
+    # move = RewTerm(func=mdp.move, weight=-1.0)
+
+    # lin_vel_z = RewTerm(func=mdp.lin_vel_z_l2, weight=-2.0)
+    # ang_vel_xy = RewTerm(func=mdp.ang_vel_xy_l2, weight=-0.05)
 
 
 @configclass
@@ -367,9 +412,13 @@ class RobotParkourEnvCfg(ManagerBasedRLEnvCfg):
         """Post initialization."""
         # general settings
         self.decimation = 4
-        self.episode_length_s = 10
+        self.episode_length_s = 6
         # viewer settings
         self.viewer.eye = (8.0, 0.0, 5.0)
+        self.viewer.origin_type = "asset_root"
+        self.viewer.asset_name = "robot"
+        self.viewer.env_index = 1
+        # self.viewer.loookat = (-35., 35., -)
         # simulation settings
         self.sim.dt = 0.005
         self.sim.render_interval = self.decimation

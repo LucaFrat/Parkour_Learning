@@ -20,7 +20,7 @@ def single_box_terrain(
     # Generate the top box
     dim_z = cfg.box_range_z[0] + (cfg.box_range_z[1] - cfg.box_range_z[0]) * difficulty
     dim = (cfg.box_size_xy[0], cfg.box_size_xy[1], dim_z)
-    pos = (cfg.size[0]/2 + 3, cfg.size[1]/2, dim_z/2)
+    pos = (cfg.size[0]/2 + cfg.box_pos_xy[0], cfg.size[1]/2 + cfg.box_pos_xy[1], dim_z/2)
     box_mesh = trimesh.creation.box(dim, trimesh.transformations.translation_matrix(pos))
     meshes_list.append(box_mesh)
 

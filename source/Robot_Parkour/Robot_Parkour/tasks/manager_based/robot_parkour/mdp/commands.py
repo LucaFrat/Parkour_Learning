@@ -71,6 +71,17 @@ class GoalBasedVelocityCommand(UniformVelocityCommand):
         self.vel_command_b[env_ids, 1] = cmd_y
         self.vel_command_b[env_ids, 2] = cmd_yaw
 
+    def _update_metrics(self):
+        # time for which the command was executed
+        max_command_time = self.cfg.resampling_time_range[1]
+        max_command_step = max_command_time / self.env.step_dt
+        # logs data
+        self.metrics["error_vel_xy"] += (
+            torch.abs(self.vel_command_b[:, 0] - self.robot.data.root_lin_vel_b[:, 0]) / max_command_step
+        )
+        # self.metrics["error_vel_yaw"] += (
+        #     torch.abs(self.vel_command_b[:, 2] - self.robot.data.root_ang_vel_b[:, 2])
+        # )
 
 
 @dataclass

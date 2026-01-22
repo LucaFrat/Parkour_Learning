@@ -51,7 +51,9 @@ def terrain_levels(
 
     robot_pos = robot_pos_w - env_origin_w
     obstacle_pos = obstacle_pos_w - env_origin_w
-    obstacle_robot_distance = torch.norm(obstacle_pos_w - robot_pos_w, dim=-1)
+    obstacle_pos[:, 0] += env.cfg.commands.forward_velocity.goal_distance_behind_obstacle
+
+    obstacle_robot_distance = torch.norm(obstacle_pos - robot_pos, dim=-1)
 
     # CONDITIONS
     # cosine similarity
@@ -66,8 +68,10 @@ def terrain_levels(
     condition_5 = torch.norm(robot_pos, dim=-1) < 1.
 
     # CHANGE DIFFICULTY
-    move_up = condition_1 & condition_2 & condition_3
-    move_down = condition_4 & condition_5
+    # move_up = condition_1 & condition_2 & condition_3
+    move_up = condition_2
+    move_down = condition_5
+    # move_down = condition_4 & condition_5
 
     move_down *= ~move_up
     terrain.update_env_origins(env_ids, move_up, move_down)
