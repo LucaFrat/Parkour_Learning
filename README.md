@@ -1,6 +1,9 @@
 # Robot Parkour Learning (Isaac Lab)
 
 <p align="center">
+  <img src="media/Go2ClimbVelocity.gif" width="80%" alt="Final Policy Demo" />
+</p>
+<p align="center">
   <img src="media/Go2_obstacle.png" width="80%" alt="Final Policy Demo" />
 </p>
 
