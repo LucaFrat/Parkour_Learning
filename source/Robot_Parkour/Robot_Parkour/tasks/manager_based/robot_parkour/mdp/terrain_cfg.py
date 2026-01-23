@@ -44,7 +44,8 @@ TERRAIN_CFG_SOFT = TerrainGeneratorCfg(
     },
 )
 
-TERRAIN_CFG_HARD = TerrainGeneratorCfg(
+
+TERRAIN_CFG_CLIMB_HARD = TerrainGeneratorCfg(
     size=(10.0, 10.0),
     curriculum=True,
     border_width=10.0,
@@ -59,7 +60,7 @@ TERRAIN_CFG_HARD = TerrainGeneratorCfg(
             proportion=1.0,
         ),
         # "random": terrain_gen_trimesh.MeshRandomGridTerrainCfg(
-        #     proportion=0.4, grid_width=0.09, grid_height_range=(0.01, 0.05), platform_width=1.5
+        #     proportion=1.0, grid_width=0.09, grid_height_range=(0.01, 0.05), platform_width=1.5
         # )
     },
 )

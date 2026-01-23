@@ -37,7 +37,7 @@ class RobotParkourSceneCfg(InteractiveSceneCfg):
         prim_path="/World/ground",
         terrain_type="generator",
         terrain_generator=mdp.TERRAIN_CFG_SOFT,
-        max_init_terrain_level=1,
+        max_init_terrain_level=5,
         collision_group=-1,
         physics_material=sim_utils.RigidBodyMaterialCfg(
             friction_combine_mode="multiply",
@@ -306,12 +306,7 @@ class RewardsCfg:
     track_lin_vel_xy_exp = RewTerm(
         func=mdp.track_lin_vel_xy_exp, weight=5.0, params={"command_name": "forward_velocity", "std": math.sqrt(0.25)}
     )
-    # track_lin_vel_xy_exp = RewTerm(
-    #     func=mdp.track_lin_vel_xy_yaw_frame_exp, weight=15.0, params={"command_name": "forward_velocity", "std": math.sqrt(0.25)}
-    # )
-    # track_ang_vel_z_exp = RewTerm(
-    #     func=mdp.track_ang_vel_z_exp, weight=2.0, params={"command_name": "forward_velocity", "std": math.sqrt(0.25)}
-    # )
+
     # FORWARD
     # forward_velocity = RewTerm(
     #     func=mdp.forward_velocity,
@@ -322,6 +317,7 @@ class RewardsCfg:
     #     func=mdp.lateral_velocity,
     #     weight= -1.0
     # )
+
     yaw_rate = RewTerm(
         func=mdp.yaw_rate,
         weight= 0.5
@@ -346,28 +342,6 @@ class RewardsCfg:
             "debug_vis": False,
         }
     )
-
-    # termination_penalty = RewTerm(func=mdp.is_terminated, weight=-100.0)
-
-    # undesired_contacts = RewTerm(
-    #     func=mdp.undesired_contacts,
-    #     weight=-1.0,
-    #     params={"sensor_cfg": SceneEntityCfg("contact_forces", body_names=".*thigh"), "threshold": 1.0},
-    # )
-
-    # feet_air_time = RewTerm(
-    #     func=mdp.feet_air_time,
-    #     weight=0.125,
-    #     params={
-    #         "sensor_cfg": SceneEntityCfg("contact_forces", body_names=".*foot"),
-    #         "command_name": "forward_velocity",
-    #         "threshold": 0.5,
-    #     },
-    # )
-    # move = RewTerm(func=mdp.move, weight=-1.0)
-
-    # lin_vel_z = RewTerm(func=mdp.lin_vel_z_l2, weight=-2.0)
-    # ang_vel_xy = RewTerm(func=mdp.ang_vel_xy_l2, weight=-0.05)
 
 
 @configclass
@@ -396,7 +370,7 @@ class CurriculumCfg:
 @configclass
 class RobotParkourEnvCfg(ManagerBasedRLEnvCfg):
     # Scene settings
-    scene: RobotParkourSceneCfg = RobotParkourSceneCfg(num_envs=4096, env_spacing=2.5)
+    scene: RobotParkourSceneCfg = RobotParkourSceneCfg(num_envs=8, env_spacing=2.5)
     # Basic settings
     observations: ObservationsCfg = ObservationsCfg()
     commands: CommandsCfg = CommandsCfg()
@@ -415,9 +389,9 @@ class RobotParkourEnvCfg(ManagerBasedRLEnvCfg):
         self.episode_length_s = 6
         # viewer settings
         self.viewer.eye = (8.0, 0.0, 5.0)
-        self.viewer.origin_type = "asset_root"
-        self.viewer.asset_name = "robot"
-        self.viewer.env_index = 1
+        # self.viewer.origin_type = "asset_root"
+        # self.viewer.asset_name = "robot"
+        # self.viewer.env_index = 1
         # self.viewer.loookat = (-35., 35., -)
         # simulation settings
         self.sim.dt = 0.005

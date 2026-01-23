@@ -13,46 +13,46 @@ from . import agents
 
 # Specialized policy on SOFT dynamics
 gym.register(
-    id="Isaac-Go2-Field-Soft-v0",
+    id="Isaac-Go2-Climb-Soft-v0",
     entry_point="isaaclab.envs:ManagerBasedRLEnv",
     disable_env_checker=True,
     kwargs={
-        "env_cfg_entry_point": f"{__name__}.env_cfg:Go2FieldSoftEnvCfg",
+        "env_cfg_entry_point": f"{__name__}.env_cfg:Go2ClimbSoftEnvCfg",
         "rsl_rl_cfg_entry_point": f"{agents.__name__}.rsl_rl_ppo_cfg:PPORunnerFieldSoftCfg",
     },
 )
 
 # Specialized policy on HARD dynamics
 gym.register(
-    id="Isaac-Go2-Field-Hard-v0",
+    id="Isaac-Go2-Climb-Hard-v0",
     entry_point="isaaclab.envs:ManagerBasedRLEnv",
     disable_env_checker=True,
     kwargs={
-        "env_cfg_entry_point": f"{__name__}.env_cfg:Go2FieldHardEnvCfg",
+        "env_cfg_entry_point": f"{__name__}.env_cfg:Go2ClimbHardEnvCfg",
         "rsl_rl_cfg_entry_point": f"{agents.__name__}.rsl_rl_ppo_cfg:PPORunnerFieldHardCfg"
     }
 )
 
 
 
-# PLAY -------------------------
+# =============================== PLAY ====================================
 
 gym.register(
-    id="Isaac-Go2-Field-Soft-Play-v0",
+    id="Isaac-Go2-Climb-Soft-Play-v0",
     entry_point="isaaclab.envs:ManagerBasedRLEnv",
     disable_env_checker=True,
     kwargs={
-        "env_cfg_entry_point": f"{__name__}.env_cfg:Go2FieldSoftEnvCfg_Play",
+        "env_cfg_entry_point": f"{__name__}.env_cfg:Go2ClimbSoftEnvCfg_Play",
         "rsl_rl_cfg_entry_point": f"{agents.__name__}.rsl_rl_ppo_cfg:PPORunnerFieldSoftCfg",
     }
 )
 
 gym.register(
-    id="Isaac-Go2-Field-Hard-Play-v0",
+    id="Isaac-Go2-Climb-Hard-Play-v0",
     entry_point="isaaclab.envs:ManagerBasedRLEnv",
     disable_env_checker=True,
     kwargs={
-        "env_cfg_entry_point": f"{__name__}.env_cfg:Go2FieldHardEnvCfg_Play",
+        "env_cfg_entry_point": f"{__name__}.env_cfg:Go2ClimbHardEnvCfg_Play",
         "rsl_rl_cfg_entry_point": f"{agents.__name__}.rsl_rl_ppo_cfg:PPORunnerFieldHardCfg",
     }
 )

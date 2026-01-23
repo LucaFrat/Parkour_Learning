@@ -31,13 +31,11 @@ def terrain_levels(
     obstacle_cfg: SceneEntityCfg = SceneEntityCfg("obstacle")
     ) -> torch.Tensor:
 
-    """ 3 conditions to move up with the difficulty:
-    1. env_origin -> robot is in the same direction as env_origin -> obstacle
+    """
+    Condition to move up with the difficulty:
     2. robot is closer than 1.0 meters to the obstacle
-    3. robot is after the obstacle
 
-    2 condition to move down:
-    4. not 1.
+    Condition to move down:
     5. robot is closer than 1.0 to the env_origin
     """
 
