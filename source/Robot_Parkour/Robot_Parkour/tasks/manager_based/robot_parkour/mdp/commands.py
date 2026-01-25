@@ -48,7 +48,11 @@ class GoalBasedVelocityCommand(UniformVelocityCommand):
         min_vel_y, max_vel_y = self.cfg.ranges.lin_vel_y
         min_ang_vel_z, max_ang_vel_z = self.cfg.ranges.ang_vel_z
 
-        goal_pos = obstacle_pos_w - env_origins
+        change_y = torch.zeros_like(obstacle_pos_w, device=self.env.device)
+        if self.cfg.goal_pos_for_tilt:
+            change_y += torch.tensor([0., self.obstacle.cfg.spawn.size[1]/2, 0.], device=self.env.device)
+
+        goal_pos = obstacle_pos_w - env_origins + change_y
         goal_pos[:, 0] += self.cfg.goal_distance_behind_obstacle
 
         if self.cfg.debug_goal_vis:
@@ -93,5 +97,6 @@ class GoalBasedVelocityCommandCfg(UniformVelocityCommandCfg):
 
     goal_distance_behind_obstacle: float = 1.0
     debug_goal_vis: bool = False
+    goal_pos_for_tilt: bool = False
 
 

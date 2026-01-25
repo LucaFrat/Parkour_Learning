@@ -36,7 +36,7 @@ class RobotParkourSceneCfg(InteractiveSceneCfg):
     terrain = TerrainImporterCfg(
         prim_path="/World/ground",
         terrain_type="generator",
-        terrain_generator=mdp.TERRAIN_CFG_SOFT,
+        terrain_generator=mdp.TERRAIN_CFG_CLIMB_SOFT,
         max_init_terrain_level=5,
         collision_group=-1,
         physics_material=sim_utils.RigidBodyMaterialCfg(
@@ -116,6 +116,7 @@ class CommandsCfg:
         heading_control_stiffness=0.5,
         debug_vis=True,
         debug_goal_vis=True,
+        goal_pos_for_tilt=False,
         ranges=mdp.UniformVelocityCommandCfg.Ranges(
             lin_vel_x=(-1, 1.5), lin_vel_y=(-1., 1.), ang_vel_z=(-2., 2.), heading=(0., 0.)
         ),
@@ -216,8 +217,8 @@ class ObservationsCfg:
 class EventCfg:
     """Configuration for events."""
 
-    reset_obstacle = EventTerm(
-        func=mdp.reset_pos_obstacles,
+    reset_obstacle_climb = EventTerm(
+        func=mdp.reset_pos_obstacles_climb,
         mode="reset",
         params={
             "obstacle_cfg": SceneEntityCfg("obstacle"),
@@ -225,6 +226,17 @@ class EventCfg:
             "range_z": (0.01, 0.45)
         }
     )
+
+    reset_obstacle_tilt = EventTerm(
+        func=mdp.reset_pos_obstacles_tilt,
+        mode="reset",
+        params={
+            "obstacle_cfg": SceneEntityCfg("obstacle"),
+            "pos_x": 2.0,
+            "range_gap": (0.28, 0.36),
+        }
+    )
+
 
     motor_strength = EventTerm(
         func=mdp.randomize_motor_strenght,
@@ -269,7 +281,7 @@ class EventCfg:
         func=mdp.reset_root_state_uniform,
         mode="reset",
         params={
-            "pose_range": {"x": (-0.3, 0.3), "y": (-0.3, 0.3), "yaw": (0.0, 0.0)},
+            "pose_range": {"x": (-0.3, 0.3), "y": (-1.5, 1.5), "yaw": (-math.pi/4, math.pi/4)},
             "velocity_range": {
                 "x": (-0.0, 0.0),
                 "y": (-0.0, 0.0),
@@ -343,6 +355,16 @@ class RewardsCfg:
         }
     )
 
+    feet_air_time = RewTerm(
+        func=mdp.feet_air_time,
+        weight=0.2,
+        params={
+            "sensor_cfg": SceneEntityCfg("contact_forces", body_names=".*_foot"),
+            "command_name": "forward_velocity",
+            "threshold": 0.5,
+        },
+    )
+
 
 @configclass
 class TerminationsCfg:
@@ -370,7 +392,7 @@ class CurriculumCfg:
 @configclass
 class RobotParkourEnvCfg(ManagerBasedRLEnvCfg):
     # Scene settings
-    scene: RobotParkourSceneCfg = RobotParkourSceneCfg(num_envs=8, env_spacing=2.5)
+    scene: RobotParkourSceneCfg = RobotParkourSceneCfg(num_envs=128, env_spacing=2.5)
     # Basic settings
     observations: ObservationsCfg = ObservationsCfg()
     commands: CommandsCfg = CommandsCfg()

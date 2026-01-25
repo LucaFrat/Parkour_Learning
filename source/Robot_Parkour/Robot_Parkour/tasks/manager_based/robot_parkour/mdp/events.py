@@ -58,7 +58,7 @@ def debug_visualize_body_points(
     PENETRATION_MANAGER.visualize(env_ids=torch.tensor([0], device=env.device))
 
 
-def reset_pos_obstacles(
+def reset_pos_obstacles_climb(
     env: ManagerBasedEnv,
     env_ids: torch.Tensor | None,
     pos_xy: tuple[float, float],
@@ -88,6 +88,41 @@ def reset_pos_obstacles(
     root_state[:, 0] = env_origins[:, 0] + x
     root_state[:, 1] = env_origins[:, 1] + y
     root_state[:, 2] = env_origins[:, 2] + z - height_of_obstacle/2
+
+    obstacle.write_root_pose_to_sim(root_state[:, :7], env_ids=env_ids)
+    obstacle.write_root_velocity_to_sim(root_state[:, 7:], env_ids=env_ids)
+
+
+def reset_pos_obstacles_tilt(
+    env: ManagerBasedEnv,
+    env_ids: torch.Tensor | None,
+    pos_x: float,
+    range_gap: tuple[float, float],
+    obstacle_cfg: SceneEntityCfg = SceneEntityCfg("obstacle"),
+    ):
+
+    obstacle: RigidObject = env.scene[obstacle_cfg.name]
+    root_state = obstacle.data.default_root_state[env_ids].clone()
+
+    gap_min, gap_max = range_gap
+    width_obstacle = obstacle.cfg.spawn.size[1]
+    height_of_obstacle = obstacle.cfg.spawn.size[2]
+
+    num_rows = env.scene.terrain.terrain_origins.shape[0]
+
+    terrain_rows = env.scene.terrain.terrain_levels[env_ids].float()
+    difficulty = terrain_rows / (num_rows-1)
+
+    gap_width = gap_min + (gap_max - gap_min) * difficulty
+    y = width_obstacle/2.0 + gap_width
+
+    x = torch.ones(len(env_ids), device=env.device) * pos_x
+    # y = torch.ones(len(env_ids), device=env.device) * pos_y
+
+    env_origins = env.scene.env_origins[env_ids]
+    root_state[:, 0] = env_origins[:, 0] + x
+    root_state[:, 1] = env_origins[:, 1] - y
+    root_state[:, 2] = env_origins[:, 2] + height_of_obstacle/2
 
     obstacle.write_root_pose_to_sim(root_state[:, :7], env_ids=env_ids)
     obstacle.write_root_velocity_to_sim(root_state[:, 7:], env_ids=env_ids)

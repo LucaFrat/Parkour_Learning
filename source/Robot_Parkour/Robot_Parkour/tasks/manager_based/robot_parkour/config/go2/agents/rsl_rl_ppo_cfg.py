@@ -85,5 +85,5 @@ class PPORunnerFieldSoftCfg(RslRlOnPolicyRunnerCfg):
 class PPORunnerFieldHardCfg(PPORunnerFieldSoftCfg):
     max_iterations=1500
     resume=True
-    load_run="2026-01-23_09-59-44"
-    load_checkpoint="model_3150.pt"
+    load_run="2026-01-22_16-56-14"
+    load_checkpoint="model_750.pt"
