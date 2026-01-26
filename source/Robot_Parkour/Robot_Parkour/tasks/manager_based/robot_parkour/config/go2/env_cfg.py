@@ -30,6 +30,7 @@ class Go2TiltSoftEnvCfg(RobotParkourEnvCfg):
         self.events.reset_obstacle_climb = None
         self.scene.obstacle.spawn.size = (0.6, 2.0, 0.9)
         self.commands.forward_velocity.goal_pos_for_tilt = True
+        self.observations.width_obstacle.is_tilt = True
 
 
 
@@ -52,12 +53,21 @@ class Go2ClimbHardEnvCfg(Go2ClimbSoftEnvCfg):
                 restitution=0.0,
             )
         self.rewards.penetration.weight = 0.0
+        self.scene.terrain.max_init_terrain_level = 5
 
 @configclass
-class Go2TiltHardEnvCfg(Go2ClimbHardEnvCfg):
+class Go2TiltHardEnvCfg(Go2TiltSoftEnvCfg):
     def __post_init__(self):
         super().__post_init__()
         self.scene.terrain.terrain_generator = mdp.TERRAIN_CFG_TILT_HARD
+        self.scene.obstacle.spawn.physics_material = sim_utils.RigidBodyMaterialCfg(
+                static_friction=1.0,
+                dynamic_friction=1.0,
+                restitution=0.0,
+            )
+        self.rewards.penetration.weight = 0.0
+        self.scene.terrain.max_init_terrain_level = 5
+
 
 
 

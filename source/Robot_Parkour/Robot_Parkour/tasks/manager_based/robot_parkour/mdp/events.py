@@ -101,6 +101,9 @@ def reset_pos_obstacles_tilt(
     obstacle_cfg: SceneEntityCfg = SceneEntityCfg("obstacle"),
     ):
 
+    if not hasattr(env, "gap_width"):
+        env.gap_width = torch.zeros(env.num_envs, device=env.device, dtype=torch.long)
+
     obstacle: RigidObject = env.scene[obstacle_cfg.name]
     root_state = obstacle.data.default_root_state[env_ids].clone()
 
@@ -123,6 +126,8 @@ def reset_pos_obstacles_tilt(
     root_state[:, 0] = env_origins[:, 0] + x
     root_state[:, 1] = env_origins[:, 1] - y
     root_state[:, 2] = env_origins[:, 2] + height_of_obstacle/2
+
+    env.gap_width[env_ids] = gap_width
 
     obstacle.write_root_pose_to_sim(root_state[:, :7], env_ids=env_ids)
     obstacle.write_root_velocity_to_sim(root_state[:, 7:], env_ids=env_ids)

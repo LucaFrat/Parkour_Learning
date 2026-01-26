@@ -116,13 +116,17 @@ def height_obstacle(
 
 def width_obstacle(
     env: ManagerBasedRLEnv,
+    is_tilt: bool = False,
     obstacle_cfg: SceneEntityCfg = SceneEntityCfg("obstacle")
     ) -> torch.Tensor:
 
     obstacle = env.scene[obstacle_cfg.name]
-    obstacle_width = obstacle.cfg.spawn.size[1]
 
-    return obstacle_width * torch.ones(env.scene.num_envs, device=env.device).unsqueeze(1)
+    if is_tilt:
+        return env.gap_width
+    else:
+        obstacle_width = obstacle.cfg.spawn.size[1]
+        return obstacle_width * torch.ones(env.scene.num_envs, device=env.device).unsqueeze(1)
 
 
 def one_hot_category(

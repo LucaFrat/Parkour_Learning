@@ -37,7 +37,7 @@ class RobotParkourSceneCfg(InteractiveSceneCfg):
         prim_path="/World/ground",
         terrain_type="generator",
         terrain_generator=mdp.TERRAIN_CFG_CLIMB_SOFT,
-        max_init_terrain_level=5,
+        max_init_terrain_level=0,
         collision_group=-1,
         physics_material=sim_utils.RigidBodyMaterialCfg(
             friction_combine_mode="multiply",
@@ -194,13 +194,17 @@ class ObservationsCfg:
 
         distance_obstacle = ObsTerm(func=mdp.distance_from_obstacle)
         height_obstacle = ObsTerm(func=mdp.height_obstacle)
-        width_obstacle = ObsTerm(func=mdp.width_obstacle)
-        category = ObsTerm(
-            func=mdp.one_hot_category,
+        width_obstacle = ObsTerm(
+            func=mdp.width_obstacle,
             params={
-                "category_id": 0,
-                "num_categories": 4
+                "is_tilt": False
             })
+        # category = ObsTerm(
+        #     func=mdp.one_hot_category,
+        #     params={
+        #         "category_id": 0,
+        #         "num_categories": 4
+        #     })
 
         def __post_init__(self) -> None:
             self.enable_corruption = False
@@ -217,6 +221,7 @@ class ObservationsCfg:
 class EventCfg:
     """Configuration for events."""
 
+    # set one of the 2 to None in the env_cfg.py
     reset_obstacle_climb = EventTerm(
         func=mdp.reset_pos_obstacles_climb,
         mode="reset",
@@ -226,7 +231,6 @@ class EventCfg:
             "range_z": (0.01, 0.45)
         }
     )
-
     reset_obstacle_tilt = EventTerm(
         func=mdp.reset_pos_obstacles_tilt,
         mode="reset",
@@ -236,7 +240,6 @@ class EventCfg:
             "range_gap": (0.28, 0.36),
         }
     )
-
 
     motor_strength = EventTerm(
         func=mdp.randomize_motor_strenght,
@@ -316,7 +319,10 @@ class RewardsCfg:
     """Reward terms for the MDP."""
 
     track_lin_vel_xy_exp = RewTerm(
-        func=mdp.track_lin_vel_xy_exp, weight=5.0, params={"command_name": "forward_velocity", "std": math.sqrt(0.25)}
+        func=mdp.track_lin_vel_xy_exp, weight=20.0, params={"command_name": "forward_velocity", "std": math.sqrt(0.5)}
+    )
+    track_ang_vel_z_exp = RewTerm(
+        func=mdp.track_ang_vel_z_exp, weight=2.0, params={"command_name": "forward_velocity", "std": math.sqrt(0.5)}
     )
 
     # FORWARD
@@ -325,15 +331,15 @@ class RewardsCfg:
     #     weight= 5.0,
     #     params={"command_name": "forward_velocity"}
     # )
-    # lateral_velocity = RewTerm(
-    #     func=mdp.lateral_velocity,
-    #     weight= -1.0
-    # )
-
-    yaw_rate = RewTerm(
-        func=mdp.yaw_rate,
-        weight= 0.5
+    lateral_velocity = RewTerm(
+        func=mdp.lateral_velocity,
+        weight= -1.0
     )
+
+    # yaw_rate = RewTerm(
+    #     func=mdp.yaw_rate,
+    #     weight= 0.5
+    # )
 
     # ENERGY
     energy_usage = RewTerm(
@@ -342,28 +348,32 @@ class RewardsCfg:
     )
 
     # ALIVE
-    alive = RewTerm(func=mdp.is_alive, weight=2.0)
+    alive = RewTerm(func=mdp.is_alive, weight=1.0)
 
     # PENETRATE
     penetration = RewTerm(
         func=mdp.obstacle_penetration,
         weight= -1.0,
         params={
-            "weight_violation": 1e-3,
-            "weight_depth": 1e-3,
+            "weight_violation": 1e-2,
+            "weight_depth": 1e-2,
             "debug_vis": False,
         }
     )
 
-    feet_air_time = RewTerm(
-        func=mdp.feet_air_time,
-        weight=0.2,
-        params={
-            "sensor_cfg": SceneEntityCfg("contact_forces", body_names=".*_foot"),
-            "command_name": "forward_velocity",
-            "threshold": 0.5,
-        },
+    termination = RewTerm(
+        func=mdp.is_terminated, weight=-100
     )
+
+    # feet_air_time = RewTerm(
+    #     func=mdp.feet_air_time,
+    #     weight=0.2,
+    #     params={
+    #         "sensor_cfg": SceneEntityCfg("contact_forces", body_names=".*_foot"),
+    #         "command_name": "forward_velocity",
+    #         "threshold": 0.5,
+    #     },
+    # )
 
 
 @configclass
@@ -392,7 +402,7 @@ class CurriculumCfg:
 @configclass
 class RobotParkourEnvCfg(ManagerBasedRLEnvCfg):
     # Scene settings
-    scene: RobotParkourSceneCfg = RobotParkourSceneCfg(num_envs=128, env_spacing=2.5)
+    scene: RobotParkourSceneCfg = RobotParkourSceneCfg(num_envs=4096, env_spacing=2.5)
     # Basic settings
     observations: ObservationsCfg = ObservationsCfg()
     commands: CommandsCfg = CommandsCfg()
@@ -408,12 +418,12 @@ class RobotParkourEnvCfg(ManagerBasedRLEnvCfg):
         """Post initialization."""
         # general settings
         self.decimation = 4
-        self.episode_length_s = 6
+        self.episode_length_s = 12
         # viewer settings
         self.viewer.eye = (8.0, 0.0, 5.0)
-        # self.viewer.origin_type = "asset_root"
-        # self.viewer.asset_name = "robot"
-        # self.viewer.env_index = 1
+        self.viewer.origin_type = "asset_root"
+        self.viewer.asset_name = "robot"
+        self.viewer.env_index = 1
         # self.viewer.loookat = (-35., 35., -)
         # simulation settings
         self.sim.dt = 0.005
