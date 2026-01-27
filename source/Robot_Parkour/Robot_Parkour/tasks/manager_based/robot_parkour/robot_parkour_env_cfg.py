@@ -199,12 +199,12 @@ class ObservationsCfg:
             params={
                 "is_tilt": False
             })
-        # category = ObsTerm(
-        #     func=mdp.one_hot_category,
-        #     params={
-        #         "category_id": 0,
-        #         "num_categories": 4
-        #     })
+        category = ObsTerm(
+            func=mdp.one_hot_category,
+            params={
+                "category_id": 0,
+                "num_categories": 4
+            })
 
         def __post_init__(self) -> None:
             self.enable_corruption = False
@@ -418,7 +418,7 @@ class RobotParkourEnvCfg(ManagerBasedRLEnvCfg):
         """Post initialization."""
         # general settings
         self.decimation = 4
-        self.episode_length_s = 12
+        self.episode_length_s = 10
         # viewer settings
         self.viewer.eye = (8.0, 0.0, 5.0)
         self.viewer.origin_type = "asset_root"

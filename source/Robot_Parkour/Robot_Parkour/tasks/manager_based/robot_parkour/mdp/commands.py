@@ -44,6 +44,9 @@ class GoalBasedVelocityCommand(UniformVelocityCommand):
         env_origins = self.env.scene.env_origins[env_ids, :]
         obstacle_pos_w = self.obstacle.data.root_pos_w[env_ids, :]
 
+        if not hasattr(self.env, "goal_pos"):
+            self.env.goal_pos = torch.zeros(self.env.num_envs, 3, device=self.env.device, dtype=torch.float)
+
         min_vel_x, max_vel_x = self.cfg.ranges.lin_vel_x
         min_vel_y, max_vel_y = self.cfg.ranges.lin_vel_y
         min_ang_vel_z, max_ang_vel_z = self.cfg.ranges.ang_vel_z
@@ -54,6 +57,9 @@ class GoalBasedVelocityCommand(UniformVelocityCommand):
 
         goal_pos = obstacle_pos_w - env_origins + change_y
         goal_pos[:, 0] += self.cfg.goal_distance_behind_obstacle
+
+        # set environment variable
+        self.env.goal_pos[env_ids] = goal_pos
 
         if self.cfg.debug_goal_vis:
             goal_pos_w = goal_pos + env_origins

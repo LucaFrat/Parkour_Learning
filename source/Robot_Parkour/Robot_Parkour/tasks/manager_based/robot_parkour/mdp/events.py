@@ -102,7 +102,7 @@ def reset_pos_obstacles_tilt(
     ):
 
     if not hasattr(env, "gap_width"):
-        env.gap_width = torch.zeros(env.num_envs, device=env.device, dtype=torch.long)
+        env.gap_width = torch.zeros(env.num_envs, device=env.device, dtype=torch.float)
 
     obstacle: RigidObject = env.scene[obstacle_cfg.name]
     root_state = obstacle.data.default_root_state[env_ids].clone()
@@ -116,7 +116,7 @@ def reset_pos_obstacles_tilt(
     terrain_rows = env.scene.terrain.terrain_levels[env_ids].float()
     difficulty = terrain_rows / (num_rows-1)
 
-    gap_width = gap_min + (gap_max - gap_min) * difficulty
+    gap_width = gap_max - (gap_max - gap_min) * difficulty
     y = width_obstacle/2.0 + gap_width
 
     x = torch.ones(len(env_ids), device=env.device) * pos_x

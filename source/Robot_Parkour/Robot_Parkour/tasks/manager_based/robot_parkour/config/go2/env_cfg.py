@@ -30,7 +30,7 @@ class Go2TiltSoftEnvCfg(RobotParkourEnvCfg):
         self.events.reset_obstacle_climb = None
         self.scene.obstacle.spawn.size = (0.6, 2.0, 0.9)
         self.commands.forward_velocity.goal_pos_for_tilt = True
-        self.observations.width_obstacle.is_tilt = True
+        self.observations.visual.width_obstacle.params["is_tilt"] = True
 
 
 

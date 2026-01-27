@@ -121,9 +121,11 @@ def width_obstacle(
     ) -> torch.Tensor:
 
     obstacle = env.scene[obstacle_cfg.name]
+    if not hasattr(env, "gap_width"):
+        env.gap_width = torch.zeros(env.scene.num_envs, device=env.device, dtype=torch.float)
 
     if is_tilt:
-        return env.gap_width
+        return env.gap_width.unsqueeze(1)
     else:
         obstacle_width = obstacle.cfg.spawn.size[1]
         return obstacle_width * torch.ones(env.scene.num_envs, device=env.device).unsqueeze(1)

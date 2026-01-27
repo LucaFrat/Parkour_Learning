@@ -40,28 +40,28 @@ def terrain_levels(
     """
 
     robot = env.scene[asset_cfg.name]
-    obstacle = env.scene[obstacle_cfg.name]
     terrain = env.scene.terrain
 
+    if not hasattr(env, "goal_pos"):
+        env.goal_pos = torch.zeros(env.num_envs, 3, device=env.device, dtype=torch.float)
+
     robot_pos_w = robot.data.root_pos_w[env_ids, :2]
-    obstacle_pos_w = obstacle.data.root_pos_w[env_ids, :2]
     env_origin_w = env.scene.env_origins[env_ids, :2]
 
     robot_pos = robot_pos_w - env_origin_w
-    obstacle_pos = obstacle_pos_w - env_origin_w
-    obstacle_pos[:, 0] += env.cfg.commands.forward_velocity.goal_distance_behind_obstacle
 
-    obstacle_robot_distance = torch.norm(obstacle_pos - robot_pos, dim=-1)
+    goal_pos = env.goal_pos[env_ids, :2]
+    goal_robot_distance = torch.norm(goal_pos - robot_pos, dim=-1)
 
     # CONDITIONS
     # cosine similarity
-    cos_similarity = F.cosine_similarity(robot_pos, obstacle_pos, dim=-1)
-    condition_1 = cos_similarity > 0.
+    # cos_similarity = F.cosine_similarity(robot_pos, goal_pos, dim=-1)
+    # condition_1 = cos_similarity > 0.
     # robot close to obstacle
-    condition_2 = torch.norm(obstacle_robot_distance, dim=-1) < 1.
+    condition_2 = torch.norm(goal_robot_distance, dim=-1) < 1.
     # robot after obstacle
-    condition_3 = torch.norm(robot_pos, dim=-1) > torch.norm(obstacle_pos, dim=-1)
-    condition_4 = torch.logical_not(condition_1)
+    # condition_3 = torch.norm(robot_pos, dim=-1) > torch.norm(goal_pos, dim=-1)
+    # condition_4 = torch.logical_not(condition_1)
     # robot is closer than 1.0 meters to the origin
     condition_5 = torch.norm(robot_pos, dim=-1) < 1.
 

@@ -8,7 +8,7 @@ import torch
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from .terrain_cfg import SingleBoxTerrainCfg, DoubleBoxTerrainCfg
+    from .terrain_cfg import SingleBoxTerrainCfg, GapBoxTerrainCfg
 
 
 
@@ -75,6 +75,50 @@ def single_box_tilt_soft_terrain(
     origin = np.array([pos[0], pos[1], 0])
 
     return meshes_list, origin
+
+
+
+def gap_box_hard_terrain(
+    difficulty: float,
+    cfg: GapBoxTerrainCfg
+    ) -> tuple[list[trimesh.Trimesh], np.ndarray]:
+
+    meshes_list = list()
+    terrain_height = 1.0
+
+    # Generate the left box
+    dim_z = cfg.box_size_z
+    dim = (cfg.box_size_xy[0], cfg.box_size_xy[1], dim_z)
+    pos = (cfg.size[0]/2 + cfg.box_pos_xy[0], cfg.size[1]/2 + cfg.box_size_xy[1]/2, dim_z/2)
+    box_mesh = trimesh.creation.box(dim, trimesh.transformations.translation_matrix(pos))
+    meshes_list.append(box_mesh)
+
+    # Generate the rigth box
+    gap_min, gap_max = cfg.gap_width
+    gap_width = gap_max - (gap_max - gap_min) * difficulty
+    new_pos_y = cfg.size[1]/2 - cfg.box_size_xy[1]/2 - gap_width
+    pos = (pos[0], new_pos_y, pos[2])
+    box_mesh = trimesh.creation.box(dim, trimesh.transformations.translation_matrix(pos))
+    meshes_list.append(box_mesh)
+
+    # Generate the ground
+    pos = (0.5 * cfg.size[0], 0.5 * cfg.size[1], -terrain_height / 2)
+    dim = (cfg.size[0], cfg.size[1], terrain_height)
+    ground_mesh = trimesh.creation.box(dim, trimesh.transformations.translation_matrix(pos))
+    meshes_list.append(ground_mesh)
+
+    # create random grid mesh
+    borders_grid_meshes, grid_mesh = get_random_grid_mesh(difficulty, cfg, terrain_height)
+    meshes_list.append(borders_grid_meshes)
+    meshes_list.append(grid_mesh)
+
+    # specify the origin of the terrain
+    origin = np.array([pos[0], pos[1], 0])
+
+    return meshes_list, origin
+
+
+
 
 def get_random_grid_mesh(
     difficulty: float,
