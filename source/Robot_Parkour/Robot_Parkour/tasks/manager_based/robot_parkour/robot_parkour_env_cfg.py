@@ -20,7 +20,7 @@ from isaaclab.scene import InteractiveSceneCfg
 from isaaclab.utils import configclass
 from isaaclab.terrains import TerrainImporterCfg
 from isaaclab.utils.assets import ISAACLAB_NUCLEUS_DIR, ISAAC_NUCLEUS_DIR
-from isaaclab.sensors import TiledCameraCfg, ContactSensorCfg, RayCasterCfg, patterns
+from isaaclab.sensors import TiledCameraCfg, ContactSensorCfg, RayCasterCfg, patterns, RayCasterCameraCfg
 from isaaclab.utils.noise import AdditiveUniformNoiseCfg as Unoise
 
 
@@ -88,18 +88,25 @@ class RobotParkourSceneCfg(InteractiveSceneCfg):
         mesh_prim_paths=["/World/ground"],
     )
 
-    # depth_camera = TiledCameraCfg(
-    #     prim_path="{ENV_REGEX_NS}/Robot/base/camera",
-    #     update_period=5, # 10Hz
-    #     height=64,
-    #     width=80,
-    #     debug_vis=False,
-    #     data_types=["depth"],
-    #     spawn=sim_utils.PinholeCameraCfg(
-    #         focal_length=24.0, focus_distance=400.0, horizontal_aperture=20.955, clipping_range=(0.1, 8.0)
-    #     ),
-    #     offset=CameraCfg.OffsetCfg(pos=(-0.4, 0.0, 0.1), rot=(0.5, -0.5, -0.5, 0.5), convention="ros"),
-    # )
+
+    depth_camera = RayCasterCameraCfg(
+        offset = RayCasterCameraCfg.OffsetCfg(
+            pos = (0.1, 0.0, 0.2),
+            rot=(0.7071, 0.0, 0.7071, 0.0),
+            convention="ros"
+        ),
+        prim_path = "{ENV_REGEX_NS}/Robot/base",
+        update_period = 0.1, #update image at 10Hz
+        debug_vis = True,
+        mesh_prim_paths = ["/World/ground"],
+        ray_alignment = "yaw",
+        max_distance = 3.0,
+        depth_clipping_behavior = "max",
+        pattern_cfg = patterns.PinholeCameraPatternCfg(
+            width = 64,
+            height = 64,
+        )
+    )
 
 
 @configclass
@@ -118,7 +125,7 @@ class CommandsCfg:
         debug_goal_vis=True,
         goal_pos_for_tilt=False,
         ranges=mdp.UniformVelocityCommandCfg.Ranges(
-            lin_vel_x=(-1, 1.5), lin_vel_y=(-1., 1.), ang_vel_z=(-2., 2.), heading=(0., 0.)
+            lin_vel_x=(-1, 1.2), lin_vel_y=(-1., 1.), ang_vel_z=(-2., 2.), heading=(0., 0.)
         ),
     )
 
@@ -149,12 +156,6 @@ class ObservationsCfg:
     class PolicyCfg(ObsGroup):
         """Observations for policy group."""
 
-        height_scan = ObsTerm(
-            func=mdp.height_scan,
-            params={"sensor_cfg": SceneEntityCfg("height_scanner")},
-            noise=Unoise(n_min=-0.1, n_max=0.1),
-            clip=(-1.0, 1.0),
-        )
         commands = ObsTerm(func=mdp.generated_commands, params={"command_name": "forward_velocity"})
 
         # proprioceptive R29
@@ -192,6 +193,12 @@ class ObservationsCfg:
     class Privileged_Visual(ObsGroup):
         """Privileged Visual Information"""
 
+        height_scan = ObsTerm(
+            func=mdp.height_scan,
+            params={"sensor_cfg": SceneEntityCfg("height_scanner")},
+            noise=Unoise(n_min=-0.1, n_max=0.1),
+            clip=(-1.0, 1.0),
+        )
         distance_obstacle = ObsTerm(func=mdp.distance_from_obstacle)
         height_obstacle = ObsTerm(func=mdp.height_obstacle)
         width_obstacle = ObsTerm(
@@ -333,7 +340,7 @@ class RewardsCfg:
     # )
     lateral_velocity = RewTerm(
         func=mdp.lateral_velocity,
-        weight= -1.0
+        weight= -2.0
     )
 
     # yaw_rate = RewTerm(
@@ -355,8 +362,8 @@ class RewardsCfg:
         func=mdp.obstacle_penetration,
         weight= -1.0,
         params={
-            "weight_violation": 1e-2,
-            "weight_depth": 1e-2,
+            "weight_violation": 5e-2,
+            "weight_depth": 5e-2,
             "debug_vis": False,
         }
     )
@@ -402,7 +409,7 @@ class CurriculumCfg:
 @configclass
 class RobotParkourEnvCfg(ManagerBasedRLEnvCfg):
     # Scene settings
-    scene: RobotParkourSceneCfg = RobotParkourSceneCfg(num_envs=4096, env_spacing=2.5)
+    scene: RobotParkourSceneCfg = RobotParkourSceneCfg(num_envs=8, env_spacing=2.5)
     # Basic settings
     observations: ObservationsCfg = ObservationsCfg()
     commands: CommandsCfg = CommandsCfg()
@@ -421,9 +428,9 @@ class RobotParkourEnvCfg(ManagerBasedRLEnvCfg):
         self.episode_length_s = 12
         # viewer settings
         self.viewer.eye = (8.0, 0.0, 5.0)
-        self.viewer.origin_type = "asset_root"
-        self.viewer.asset_name = "robot"
-        self.viewer.env_index = 1
+        # self.viewer.origin_type = "asset_root"
+        # self.viewer.asset_name = "robot"
+        # self.viewer.env_index = 1
         # self.viewer.loookat = (-35., 35., -)
         # simulation settings
         self.sim.dt = 0.005
