@@ -83,7 +83,7 @@ class RobotParkourSceneCfg(InteractiveSceneCfg):
         prim_path="{ENV_REGEX_NS}/Robot/base",
         offset=RayCasterCfg.OffsetCfg(pos=(0.0, 0.0, 20.0)),
         ray_alignment="yaw",
-        pattern_cfg=patterns.GridPatternCfg(resolution=0.1, size=[1.6, 1.0]),
+        pattern_cfg=patterns.GridPatternCfg(resolution=0.1, size=[1.2, 0.8]),
         debug_vis=False,
         mesh_prim_paths=["/World/ground"],
     )
@@ -130,13 +130,13 @@ class ActionsCfg:
     joint_pos_hips = mdp.JointPositionActionCfg(
         asset_name="robot",
         joint_names=[".*hip_joint"],
-        scale=0.25,
+        scale=0.4,
         use_default_offset=True
     )
     joint_pos_thigh_knee = mdp.JointPositionActionCfg(
         asset_name="robot",
         joint_names=[".*thigh_joint", ".*calf_joint"],
-        scale=0.25,
+        scale=0.6,
         use_default_offset=True
     )
 
@@ -199,12 +199,12 @@ class ObservationsCfg:
             params={
                 "is_tilt": False
             })
-        category = ObsTerm(
-            func=mdp.one_hot_category,
-            params={
-                "category_id": 0,
-                "num_categories": 4
-            })
+        # category = ObsTerm(
+        #     func=mdp.one_hot_category,
+        #     params={
+        #         "category_id": 0,
+        #         "num_categories": 4
+        #     })
 
         def __post_init__(self) -> None:
             self.enable_corruption = False
@@ -237,7 +237,7 @@ class EventCfg:
         params={
             "obstacle_cfg": SceneEntityCfg("obstacle"),
             "pos_x": 2.0,
-            "range_gap": (0.28, 0.36),
+            "range_gap": (0.28, 1.0),
         }
     )
 
@@ -284,7 +284,7 @@ class EventCfg:
         func=mdp.reset_root_state_uniform,
         mode="reset",
         params={
-            "pose_range": {"x": (-0.3, 0.3), "y": (-1.5, 1.5), "yaw": (-math.pi/4, math.pi/4)},
+            "pose_range": {"x": (-0.3, 0.3), "y": (-1.0, 1.0), "yaw": (-math.pi/4, math.pi/4)},
             "velocity_range": {
                 "x": (-0.0, 0.0),
                 "y": (-0.0, 0.0),
@@ -309,7 +309,7 @@ class EventCfg:
         func=mdp.push_by_setting_velocity,
         mode="interval",
         interval_range_s=(2.0, 5.0),
-        params={"velocity_range": {"x": (-0.3, 0.3), "y": (-0.3, 0.3)}},
+        params={"velocity_range": {"x": (-0.5, 0.5), "y": (-0.5, 0.5)}},
     )
 
 
@@ -319,7 +319,7 @@ class RewardsCfg:
     """Reward terms for the MDP."""
 
     track_lin_vel_xy_exp = RewTerm(
-        func=mdp.track_lin_vel_xy_exp, weight=20.0, params={"command_name": "forward_velocity", "std": math.sqrt(0.5)}
+        func=mdp.track_lin_vel_xy_exp, weight=15.0, params={"command_name": "forward_velocity", "std": math.sqrt(0.5)}
     )
     track_ang_vel_z_exp = RewTerm(
         func=mdp.track_ang_vel_z_exp, weight=2.0, params={"command_name": "forward_velocity", "std": math.sqrt(0.5)}
@@ -361,9 +361,9 @@ class RewardsCfg:
         }
     )
 
-    termination = RewTerm(
-        func=mdp.is_terminated, weight=-100
-    )
+    # termination = RewTerm(
+    #     func=mdp.is_terminated, weight=-100
+    # )
 
     # feet_air_time = RewTerm(
     #     func=mdp.feet_air_time,
@@ -418,7 +418,7 @@ class RobotParkourEnvCfg(ManagerBasedRLEnvCfg):
         """Post initialization."""
         # general settings
         self.decimation = 4
-        self.episode_length_s = 10
+        self.episode_length_s = 12
         # viewer settings
         self.viewer.eye = (8.0, 0.0, 5.0)
         self.viewer.origin_type = "asset_root"

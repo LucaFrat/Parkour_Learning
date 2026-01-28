@@ -17,6 +17,9 @@ class Go2ClimbSoftEnvCfg(RobotParkourEnvCfg):
         self.scene.robot = UNITREE_GO2_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
         self.scene.robot.actuators["base_legs"].stiffness = 40.0
         self.scene.robot.actuators["base_legs"].damping = 1.0
+        self.commands.forward_velocity.ranges = mdp.UniformVelocityCommandCfg.Ranges(
+            lin_vel_x=(-1.2, 1.2), lin_vel_y=(-1.2, 1.2), ang_vel_z=(-2., 2.), heading=(0., 0.)
+        )
 
 
 @configclass
@@ -31,6 +34,9 @@ class Go2TiltSoftEnvCfg(RobotParkourEnvCfg):
         self.scene.obstacle.spawn.size = (0.6, 2.0, 0.9)
         self.commands.forward_velocity.goal_pos_for_tilt = True
         self.observations.visual.width_obstacle.params["is_tilt"] = True
+        self.commands.forward_velocity.ranges = mdp.UniformVelocityCommandCfg.Ranges(
+            lin_vel_x=(-0.5, 0.5), lin_vel_y=(-0.5, 0.5), ang_vel_z=(-2., 2.), heading=(0., 0.)
+        )
 
 
 
