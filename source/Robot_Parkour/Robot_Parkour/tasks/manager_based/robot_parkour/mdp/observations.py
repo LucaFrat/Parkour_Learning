@@ -8,6 +8,7 @@ import torch.nn.functional as F
 from isaaclab.managers import SceneEntityCfg
 from isaaclab.utils.math import euler_xyz_from_quat, quat_apply_inverse
 from isaaclab_assets.robots.unitree import UNITREE_GO2_CFG
+from isaaclab.sensors import RayCasterCamera, RayCaster
 
 
 if TYPE_CHECKING:
@@ -141,3 +142,26 @@ def one_hot_category(
     one_hot = F.one_hot(indices, num_classes=num_categories)
 
     return one_hot.float()
+
+
+def depth_scan(
+    env: ManagerBasedRLEnv,
+    sensor_cfg: SceneEntityCfg = SceneEntityCfg("depth_camera"),
+    normalize: bool = True
+) -> torch.Tensor:
+    """
+    Computes the depth (distance) from the ray caster sensor to the hit point.
+    Feed the raw information to the Encoder network
+    """
+
+    sensor: RayCasterCamera = env.scene.sensors[sensor_cfg.name]
+    # shape = (num_envs, 64, 64, 1)
+    depth_image = sensor.data.output["distance_to_image_plane"]
+
+    # (num_envs, 64*64)
+    flat_image = torch.flatten(depth_image, start_dim=1)
+    # print(flat_image.shape)
+
+    # feed to Encoder Network
+
+    return flat_image

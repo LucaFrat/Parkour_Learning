@@ -89,24 +89,24 @@ class RobotParkourSceneCfg(InteractiveSceneCfg):
     )
 
 
-    depth_camera = RayCasterCameraCfg(
-        offset = RayCasterCameraCfg.OffsetCfg(
-            pos = (0.1, 0.0, 0.2),
-            rot=(0.7071, 0.0, 0.7071, 0.0),
-            convention="ros"
-        ),
-        prim_path = "{ENV_REGEX_NS}/Robot/base",
-        update_period = 0.1, #update image at 10Hz
-        debug_vis = True,
-        mesh_prim_paths = ["/World/ground"],
-        ray_alignment = "yaw",
-        max_distance = 3.0,
-        depth_clipping_behavior = "max",
-        pattern_cfg = patterns.PinholeCameraPatternCfg(
-            width = 64,
-            height = 64,
-        )
-    )
+    # depth_camera = RayCasterCameraCfg(
+    #     offset = RayCasterCameraCfg.OffsetCfg(
+    #         pos = (0.1, 0.0, 0.2),
+    #         rot=(0.7071, 0.0, 0.7071, 0.0),
+    #         convention="ros"
+    #     ),
+    #     prim_path = "{ENV_REGEX_NS}/Robot/base",
+    #     update_period = 0.1, #update image at 10Hz
+    #     debug_vis = True,
+    #     mesh_prim_paths = ["/World/ground"],
+    #     ray_alignment = "yaw",
+    #     max_distance = 3.0,
+    #     depth_clipping_behavior = "max",
+    #     pattern_cfg = patterns.PinholeCameraPatternCfg(
+    #         width = 64,
+    #         height = 64,
+    #     )
+    # )
 
 
 @configclass
@@ -206,22 +206,23 @@ class ObservationsCfg:
             params={
                 "is_tilt": False
             })
-        # category = ObsTerm(
-        #     func=mdp.one_hot_category,
-        #     params={
-        #         "category_id": 0,
-        #         "num_categories": 4
-        #     })
 
         def __post_init__(self) -> None:
             self.enable_corruption = False
             self.concatenate_terms = True
 
+    # @configclass
+    # class DepthImage(ObsGroup):
+    #     """Depth camera image for student"""
+    #     depth_image = ObsTerm(
+    #         func = mdp.depth_scan,
+    #     )
 
     # observation groups
     policy: PolicyCfg = PolicyCfg()
     physics: Privileged_Physical = Privileged_Physical()
     visual: Privileged_Visual = Privileged_Visual()
+    # depth: DepthImage = DepthImage()
 
 
 @configclass
@@ -244,7 +245,7 @@ class EventCfg:
         params={
             "obstacle_cfg": SceneEntityCfg("obstacle"),
             "pos_x": 2.0,
-            "range_gap": (0.28, 1.0),
+            "range_gap": (0.32, 0.7),
         }
     )
 
@@ -409,7 +410,7 @@ class CurriculumCfg:
 @configclass
 class RobotParkourEnvCfg(ManagerBasedRLEnvCfg):
     # Scene settings
-    scene: RobotParkourSceneCfg = RobotParkourSceneCfg(num_envs=8, env_spacing=2.5)
+    scene: RobotParkourSceneCfg = RobotParkourSceneCfg(num_envs=4096, env_spacing=2.5)
     # Basic settings
     observations: ObservationsCfg = ObservationsCfg()
     commands: CommandsCfg = CommandsCfg()
