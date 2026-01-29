@@ -124,6 +124,20 @@ class Go2TiltHardEnvCfg_Play(Go2TiltHardEnvCfg):
             self.scene.terrain.terrain_generator.curriculum = True
 
 
+@configclass
+class Go2TiltSoftEnvCfg_Play(Go2TiltSoftEnvCfg):
+    def __post_init__(self):
+        super().__post_init__()
+
+        self.scene.num_envs = 50
+        self.observations.policy.enable_corruption = False
+        self.scene.terrain.max_init_terrain_level = None
+
+        if self.scene.terrain.terrain_generator is not None:
+            self.scene.terrain.terrain_generator.num_rows = 5
+            self.scene.terrain.terrain_generator.num_cols = 5
+            self.scene.terrain.terrain_generator.curriculum = False
+
 
 
 

@@ -84,6 +84,16 @@ gym.register(
 )
 
 gym.register(
+    id="Isaac-Go2-Tilt-Soft-Play-v0",
+    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.env_cfg:Go2TiltSoftEnvCfg_Play",
+        "rsl_rl_cfg_entry_point": f"{agents.__name__}.rsl_rl_ppo_cfg:PPORunnerFieldSoftCfg",
+    }
+)
+
+gym.register(
     id="Isaac-Go2-Tilt-Hard-Play-v0",
     entry_point="isaaclab.envs:ManagerBasedRLEnv",
     disable_env_checker=True,

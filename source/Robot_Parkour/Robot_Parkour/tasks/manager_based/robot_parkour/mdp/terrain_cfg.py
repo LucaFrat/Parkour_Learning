@@ -32,7 +32,7 @@ class SingleBoxTiltSoftTerrainCfg(SubTerrainBaseCfg):
 @configclass
 class GapBoxTerrainCfg(SingleBoxTiltSoftTerrainCfg):
     function = gap_box_hard_terrain
-    gap_width: tuple[float, float] = (0.32, 0.7)
+    gap_width: tuple[float, float] = (0.3, 0.7)
 
 
 

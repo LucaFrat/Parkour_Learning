@@ -201,6 +201,6 @@ def obstacle_penetration(
 
     if debug_vis:
         is_point_inside = depths > 0.0
-        PENETRATION_MANAGER.visualize(is_inside_list=is_point_inside, env_ids=[0])
+        PENETRATION_MANAGER.visualize(is_inside_list=is_point_inside)
 
     return penalty

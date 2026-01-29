@@ -245,7 +245,7 @@ class EventCfg:
         params={
             "obstacle_cfg": SceneEntityCfg("obstacle"),
             "pos_x": 2.0,
-            "range_gap": (0.32, 0.7),
+            "range_gap": (0.3, 0.7),
         }
     )
 
@@ -327,7 +327,7 @@ class RewardsCfg:
     """Reward terms for the MDP."""
 
     track_lin_vel_xy_exp = RewTerm(
-        func=mdp.track_lin_vel_xy_exp, weight=15.0, params={"command_name": "forward_velocity", "std": math.sqrt(0.5)}
+        func=mdp.track_lin_vel_xy_exp, weight=20.0, params={"command_name": "forward_velocity", "std": math.sqrt(0.5)}
     )
     track_ang_vel_z_exp = RewTerm(
         func=mdp.track_ang_vel_z_exp, weight=2.0, params={"command_name": "forward_velocity", "std": math.sqrt(0.5)}
@@ -363,8 +363,8 @@ class RewardsCfg:
         func=mdp.obstacle_penetration,
         weight= -1.0,
         params={
-            "weight_violation": 5e-2,
-            "weight_depth": 5e-2,
+            "weight_violation": 3e-2,
+            "weight_depth": 3e-2,
             "debug_vis": False,
         }
     )
