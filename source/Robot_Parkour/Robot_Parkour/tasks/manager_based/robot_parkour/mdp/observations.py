@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import torch
+import os
 from typing import TYPE_CHECKING
 import numpy as np
 import torch.nn.functional as F
+
+from Robot_Parkour.tasks.manager_based.robot_parkour.utils.encoder import DepthEncoder
 
 from isaaclab.managers import SceneEntityCfg
 from isaaclab.utils.math import euler_xyz_from_quat, quat_apply_inverse
@@ -146,22 +149,56 @@ def one_hot_category(
 
 def depth_scan(
     env: ManagerBasedRLEnv,
+    model_path: str = None,
+    normalize: bool = True,
     sensor_cfg: SceneEntityCfg = SceneEntityCfg("depth_camera"),
-    normalize: bool = True
-) -> torch.Tensor:
+    ) -> torch.Tensor:
     """
     Computes the depth (distance) from the ray caster sensor to the hit point.
     Feed the raw information to the Encoder network
     """
 
+    # ======================================================================
+    # 1. Lazy Load the Encoder (Only runs once)
+    # ======================================================================
+    if not hasattr(env, "depth_encoder"):
+        print("[INFO] Loading Depth Encoder for Observation...")
+
+        device = env.device
+        if not os.path.exists(model_path):
+            print(f"Error: {model_path} not found.")
+            return
+
+        # Initialize and Load
+        model = DepthEncoder().to(device)
+        model.load_state_dict(torch.load(model_path, map_location=device))
+
+        # Freeze and Set to Eval
+        model.eval()
+        model.requires_grad_(False)
+
+        # Attach to env so we don't reload next step
+        env.depth_encoder = model
+        print(f"[INFO] Depth Encoder loaded successfully from {model_path}")
+
+    # ======================================================================
+    # 2. Process Sensor Data
+    # ======================================================================
     sensor: RayCasterCamera = env.scene.sensors[sensor_cfg.name]
-    # shape = (num_envs, 64, 64, 1)
-    depth_image = sensor.data.output["distance_to_image_plane"]
 
-    # (num_envs, 64*64)
-    flat_image = torch.flatten(depth_image, start_dim=1)
-    # print(flat_image.shape)
+    # Raw Output Shape: (num_envs, Height, Width, 1)
+    depth_image = sensor.data.output["distance_to_image_plane"].clone()
 
-    # feed to Encoder Network
+    if normalize:
+        depth_image = depth_image / torch.max(depth_image)
+        depth_image = torch.clamp(depth_image, 0.0, 1.0)
 
-    return flat_image
+    # for CNN
+    # Input: (N, H, W, 1) -> Output: (N, 1, H, W)
+    depth_image = depth_image.permute(0, 3, 1, 2)
+
+    with torch.no_grad():
+        # Output shape: (N, 128)
+        latent_vector = env.depth_encoder(depth_image)
+
+    return latent_vector

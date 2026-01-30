@@ -10,13 +10,13 @@ from Robot_Parkour.tasks.manager_based.robot_parkour.utils.rl_cfg import MyRslRl
 
 @configclass
 class DistillationRunnerCfg(RslRlDistillationRunnerCfg):
-    load_run="2026-01-27_22-25-42"
-    load_checkpoint="model_1800.pt"
+    load_run="2026-01-29_05-45-53"
+    load_checkpoint="model_2550.pt"
     num_steps_per_env = 120
-    max_iterations = 300
+    max_iterations = 1000
     obs_groups = {
             "teacher": ["policy", "physics", "visual"],
-            "policy": ["policy"],
+            "policy": ["policy", "depth"],
         }
     save_interval = 50
     experiment_name = "parkour_gru"

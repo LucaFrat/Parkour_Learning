@@ -168,7 +168,7 @@ def train():
         print(f"Epoch {epoch+1}/{EPOCHS} | Loss: {avg_loss:.6f} | Time: {time.time()-start_time:.1f}s")
 
     # Save the ENCODER only (this is what you need for the student)
-    torch.save(model.state_dict(), "datasets/depth_encoder.pt")
+    torch.save(model.encoder.state_dict(), "datasets/depth_encoder.pt")
     print("Training complete. Encoder saved to 'depth_encoder.pt'")
 
 

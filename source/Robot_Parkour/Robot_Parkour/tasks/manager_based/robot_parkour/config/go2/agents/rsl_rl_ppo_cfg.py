@@ -46,10 +46,10 @@ class PPORunnerCfg(RslRlOnPolicyRunnerCfg):
 @configclass
 class PPORunnerFieldSoftCfg(RslRlOnPolicyRunnerCfg):
     num_steps_per_env = 24
-    max_iterations = 1500
+    max_iterations = 3000
     obs_groups = {
-            "policy": ["policy", "physics", "visual"],
-            "critic": ["policy", "physics", "visual"],
+            "policy": ["policy", "physics", "depth"],
+            "critic": ["policy", "physics", "depth"],
         }
     save_interval = 150
     experiment_name = "parkour_gru"
@@ -85,5 +85,5 @@ class PPORunnerFieldSoftCfg(RslRlOnPolicyRunnerCfg):
 class PPORunnerFieldHardCfg(PPORunnerFieldSoftCfg):
     max_iterations=3000
     resume=True
-    load_run="2026-01-29_05-45-53"
-    load_checkpoint="model_2550.pt"
+    load_run="2026-01-30_15-03-52"
+    load_checkpoint="model_2999.pt"
